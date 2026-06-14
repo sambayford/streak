@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Streak — Habit Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0f0f12;
+    --surface: #1a1a20;
+    --surface2: #22222a;
+    --border: #2e2e38;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --positive: #4ade80;
+    --positive-dim: rgba(74,222,128,0.12);
+    --negative: #f87171;
+    --negative-dim: rgba(248,113,113,0.12);
+    --accent: #a78bfa;
+    --accent-dim: rgba(167,139,250,0.15);
+    --gold: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: none;
+  }
+
+  /* ── Layout ── */
+  .app { max-width: 480px; margin: 0 auto; padding: 0 16px 120px; }
+
+  /* ── Header ── */
+  header {
+    padding: 24px 0 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    line-height: 1;
+  }
+  .wordmark span { color: var(--accent); }
+
+  .date-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  /* ── Score ring ── */
+  .score-block {
+    text-align: right;
+  }
+  .score-ring-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin-left: auto;
+  }
+  .score-ring-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .score-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Streak bar ── */
+  .streak-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .streak-icon { font-size: 22px; }
+  .streak-text strong {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .streak-text p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── Sections ── */
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 24px 0 10px;
+  }
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .add-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .add-btn:active { background: var(--surface2); }
+
+  /* ── Habit card ── */
+  .habit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .habit-card.positive { border-left: 3px solid var(--positive); }
+  .habit-card.negative { border-left: 3px solid var(--negative); }
+  .habit-card.done-today { opacity: 0.55; }
+
+  .habit-icon {
+    font-size: 24px;
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .habit-info { flex: 1; min-width: 0; }
+  .habit-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .habit-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .habit-pts {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .habit-pts.pos { color: var(--positive); }
+  .habit-pts.neg { color: var(--negative); }
+
+  .habit-check {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .habit-card.positive .habit-check:active { background: var(--positive-dim); }
+  .habit-card.negative .habit-check:active { background: var(--negative-dim); }
+  .habit-check.checked { border-color: var(--positive); background: var(--positive-dim); }
+  .habit-check.checked-neg { border-color: var(--negative); background: var(--negative-dim); }
+
+  .habit-long-press {
+    position: relative;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--muted);
+    font-size: 13px;
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15,15,18,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+    z-index: 100;
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 16px;
+    border-radius: 10px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn .icon { font-size: 22px; }
+
+  /* ── Panels ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Reminders ── */
+  .reminder-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .reminder-icon { font-size: 22px; }
+  .reminder-info { flex: 1; }
+  .reminder-time {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .reminder-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .toggle {
+    width: 44px;
+    height: 26px;
+    background: var(--border);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Stats ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-value.green { color: var(--positive); }
+  .stat-value.red { color: var(--negative); }
+  .stat-value.purple { color: var(--accent); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .history-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 72px;
+    flex-shrink: 0;
+  }
+  .history-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .history-bar { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.3s; }
+  .history-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 480px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    outline: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+
+  .type-toggle {
+    display: flex;
+    gap: 8px;
+  }
+  .type-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .type-btn.pos.selected { background: var(--positive-dim); border-color: var(--positive); color: var(--positive); }
+  .type-btn.neg.selected { background: var(--negative-dim); border-color: var(--negative); color: var(--negative); }
+
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 8px;
+    border: 1px solid var(--border);
+  }
+  .emoji-opt {
+    font-size: 22px;
+    text-align: center;
+    padding: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .emoji-opt:active, .emoji-opt.selected { background: var(--accent-dim); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn-primary {
+    flex: 1;
+    background: var(--accent);
+    color: #0f0f12;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-danger {
+    background: var(--negative-dim);
+    color: var(--negative);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 300;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+    max-width: calc(100vw - 32px);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Notification permission banner ── */
+  .notif-banner {
+    background: var(--accent-dim);
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .notif-banner p { font-size: 13px; color: var(--text); flex: 1; }
+  .notif-banner button {
+    background: var(--accent);
+    color: #0f0f12;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .reset-day-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+  }
+
+  select option { background: #1a1a20; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TODAY panel -->
+  <div class="panel active" id="panel-today">
+    <header>
+      <div>
+        <div class="wordmark">streak<span>.</span></div>
+        <div class="date-label" id="today-date"></div>
+      </div>
+      <div class="score-block">
+        <div class="score-ring-wrap">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" stroke="#2e2e38" stroke-width="5" fill="none"/>
+            <circle id="score-arc" cx="32" cy="32" r="26" stroke="#a78bfa" stroke-width="5" fill="none"
+              stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"/>
+          </svg>
+          <div class="score-number" id="score-display">0</div>
+        </div>
+        <div class="score-label">today</div>
+      </div>
+    </header>
+
+    <div class="streak-row">
+      <div class="streak-icon">🔥</div>
+      <div class="streak-text">
+        <strong id="streak-count">0</strong>
+        <p id="streak-label">day streak — keep going</p>
+      </div>
+      <button class="reset-day-btn" id="reset-day-btn" title="Reset today">↺ reset</button>
+    </div>
+
+    <div id="notif-banner-wrap"></div>
+
+    <!-- Positive habits -->
+    <div class="section-head">
+      <span class="section-title">✅ Good habits</span>
+      <button class="add-btn" onclick="openAddModal('positive')">＋</button>
+    </div>
+    <div id="positive-list"></div>
+
+    <!-- Negative habits -->
+    <div class="section-head">
+      <span class="section-title">⚠️ Break these</span>
+      <button class="add-btn" onclick="openAddModal('negative')">＋</button>
+    </div>
+    <div id="negative-list"></div>
+  </div>
+
+  <!-- REMINDERS panel -->
+  <div class="panel" id="panel-reminders">
+    <header>
+      <div>
+        <div class="wordmark">reminders<span>.</span></div>
+        <div class="date-label">tap a time to get nudged</div>
+      </div>
+    </header>
+
+    <div id="notif-banner-wrap2"></div>
+
+    <div class="section-head">
+      <span class="section-title">🔔 Scheduled</span>
+      <button class="add-btn" onclick="openReminderModal()">＋</button>
+    </div>
+    <div id="reminders-list"></div>
+  </div>
+
+  <!-- STATS panel -->
+  <div class="panel" id="panel-stats">
+    <header>
+      <div>
+        <div class="wordmark">progress<span>.</span></div>
+        <div class="date-label">your journey</div>
+      </div>
+    </header>
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="section-head">
+      <span class="section-title">📅 Last 7 days</span>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+</div><!-- .app -->
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('today', this)">
+    <span class="icon">✦</span>Today
+  </button>
+  <button class="nav-btn" onclick="switchTab('reminders', this)">
+    <span class="icon">🔔</span>Reminders
+  </button>
+  <button class="nav-btn" onclick="switchTab('stats', this)">
+    <span class="icon">📊</span>Progress
+  </button>
+</nav>
+
+<!-- Add Habit Modal -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal">
+    <h2 id="modal-title">New habit</h2>
+    <div class="field">
+      <label>Type</label>
+      <div class="type-toggle">
+        <button class="type-btn pos selected" id="type-pos" onclick="setType('positive')">✅ Good habit</button>
+        <button class="type-btn neg" id="type-neg" onclick="setType('negative')">⚠️ Break it</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="habit-name-input" placeholder="e.g. Morning run" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Points (1–20)</label>
+      <input type="number" id="habit-pts-input" value="5" min="1" max="20">
+    </div>
+    <div class="field">
+      <label>Icon</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+    <div class="modal-actions" id="habit-modal-actions">
+      <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveHabit()">Save habit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal-overlay" id="reminder-modal">
+  <div class="modal">
+    <h2>New reminder</h2>
+    <div class="field">
+      <label>Label</label>
+      <input type="text" id="reminder-label-input" placeholder="e.g. Morning check-in" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Time</label>
+      <input type="time" id="reminder-time-input" value="08:00">
+    </div>
+    <div class="field">
+      <label>Repeat</label>
+      <select id="reminder-days">
+        <option value="daily">Every day</option>
+        <option value="weekdays">Weekdays only</option>
+        <option value="weekends">Weekends only</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('reminder-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveReminder()">Save reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
+  '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('streak_v2') || '{}');
+    return {
+      habits: s.habits || [],
+      log: s.log || {},       // { 'YYYY-MM-DD': { habitId: true } }
+      reminders: s.reminders || [],
+      streak: s.streak || 0,
+      lastActive: s.lastActive || null
+    };
+  } catch { return { habits: [], log: {}, reminders: [], streak: 0, lastActive: null }; }
+}
+
+function save() {
+  localStorage.setItem('streak_v2', JSON.stringify(state));
+}
+
+const todayKey = () => new Date().toISOString().slice(0,10);
+const todayLog = () => state.log[todayKey()] || {};
+
+// ─── Streak logic ─────────────────────────────────────────────────────────────
+function updateStreak() {
+  const today = todayKey();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const positives = state.habits.filter(h => h.type === 'positive');
+  if (positives.length === 0) return;
+  const log = todayLog();
+  const allDone = positives.every(h => log[h.id]);
+  if (allDone) {
+    if (state.lastActive === yesterday) {
+      state.streak++;
+    } else if (state.lastActive !== today) {
+      state.streak = 1;
+    }
+    state.lastActive = today;
+  }
+}
+
+// ─── Score ────────────────────────────────────────────────────────────────────
+function calcScore(dateKey) {
+  const log = state.log[dateKey] || {};
+  return state.habits.reduce((acc, h) => {
+    if (!log[h.id]) return acc;
+    return acc + (h.type === 'positive' ? h.pts : -h.pts);
+  }, 0);
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  renderToday();
+  renderReminders();
+  renderStats();
+}
+
+function renderToday() {
+  const dateEl = document.getElementById('today-date');
+  dateEl.textContent = new Date().toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' });
+
+  const score = calcScore(todayKey());
+  document.getElementById('score-display').textContent = score > 0 ? '+'+score : score;
+
+  // Ring: scale 0–50 points to full circle
+  const pct = Math.min(Math.max(score, 0), 50) / 50;
+  const circ = 163.36;
+  const arc = document.getElementById('score-arc');
+  arc.style.strokeDashoffset = circ - pct * circ;
+  arc.style.stroke = score < 0 ? '#f87171' : score === 0 ? '#6b6b80' : '#a78bfa';
+
+  document.getElementById('streak-count').textContent = state.streak;
+  document.getElementById('streak-label').textContent =
+    state.streak === 0 ? 'Start your streak today' :
+    state.streak === 1 ? 'day streak — keep it going!' :
+    `day streak — incredible!`;
+
+  // Lists
+  renderHabitList('positive');
+  renderHabitList('negative');
+
+  // Notification banner
+  renderNotifBanner('notif-banner-wrap');
+}
+
+function renderHabitList(type) {
+  const el = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
+  const habits = state.habits.filter(h => h.type === type);
+  if (habits.length === 0) {
+    el.innerHTML = `<div class="empty">Tap + to add a habit</div>`;
+    return;
+  }
+  const log = todayLog();
+  el.innerHTML = habits.map(h => {
+    const done = !!log[h.id];
+    const checkClass = done ? (type === 'positive' ? 'checked' : 'checked-neg') : '';
+    const checkIcon = done ? '✓' : '';
+    return `<div class="habit-card ${type} ${done ? 'done-today' : ''}" 
+              oncontextmenu="openEditModal('${h.id}'); return false;"
+              ontouchstart="startLongPress('${h.id}', event)"
+              ontouchend="cancelLongPress()"
+              ontouchmove="cancelLongPress()">
+      <div class="habit-icon">${h.icon}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-meta">${done ? 'Done today' : 'Tap to log'} · hold to edit</div>
+      </div>
+      <div class="habit-pts ${type === 'positive' ? 'pos' : 'neg'}">${type === 'positive' ? '+' : '-'}${h.pts}</div>
+      <button class="habit-check ${checkClass}" onclick="toggleHabit('${h.id}')">${checkIcon}</button>
+    </div>`;
+  }).join('');
+}
+
+function renderReminders() {
+  renderNotifBanner('notif-banner-wrap2');
+  const el = document.getElementById('reminders-list');
+  if (state.reminders.length === 0) {
+    el.innerHTML = `<div class="empty">No reminders yet — add one to stay on track</div>`;
+    return;
+  }
+  el.innerHTML = state.reminders.map(r => {
+    const [hh, mm] = r.time.split(':');
+    const h = parseInt(hh);
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const displayH = h % 12 || 12;
+    return `<div class="reminder-card">
+      <div class="reminder-icon">🔔</div>
+      <div class="reminder-info">
+        <div class="reminder-time">${displayH}:${mm}<span style="font-size:14px;color:var(--muted)"> ${ampm}</span></div>
+        <div class="reminder-label">${r.label} · ${r.days}</div>
+      </div>
+      <button class="toggle ${r.on ? 'on' : ''}" onclick="toggleReminder('${r.id}')"></button>
+      <button class="delete-btn" onclick="deleteReminder('${r.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const today = todayKey();
+  let totalPos = 0, totalNeg = 0, bestScore = 0, totalDays = 0;
+  const days = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    const key = d.toISOString().slice(0,10);
+    const s = calcScore(key);
+    const label = i === 0 ? 'Today' : d.toLocaleDateString('en-AU',{weekday:'short'});
+    days.push({ key, label, score: s });
+    if (s > 0) { totalPos += s; totalDays++; }
+    if (s < 0) totalNeg += Math.abs(s);
+    if (s > bestScore) bestScore = s;
+  }
+
+  const grid = document.getElementById('stat-grid');
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-value gold">${state.streak}</div><div class="stat-name">Day streak</div></div>
+    <div class="stat-card"><div class="stat-value green">+${totalPos}</div><div class="stat-name">Points gained (7d)</div></div>
+    <div class="stat-card"><div class="stat-value purple">${bestScore || 0}</div><div class="stat-name">Best day score</div></div>
+    <div class="stat-card"><div class="stat-value">${state.habits.length}</div><div class="stat-name">Habits tracked</div></div>
+  `;
+
+  const maxScore = Math.max(...days.map(d => d.score), 1);
+  document.getElementById('history-list').innerHTML = days.map(d => {
+    const pct = d.score <= 0 ? 0 : Math.round((d.score / maxScore) * 100);
+    const col = d.score < 0 ? '#f87171' : d.score === 0 ? '#6b6b80' : '#a78bfa';
+    return `<div class="history-row">
+      <div class="history-date">${d.label}</div>
+      <div class="history-bar-wrap"><div class="history-bar" style="width:${pct}%;background:${col}"></div></div>
+      <div class="history-score" style="color:${col}">${d.score > 0 ? '+' : ''}${d.score}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Interactions ─────────────────────────────────────────────────────────────
+function toggleHabit(id) {
+  const key = todayKey();
+  if (!state.log[key]) state.log[key] = {};
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const wasDone = !!state.log[key][id];
+  state.log[key][id] = !wasDone;
+  if (!wasDone) {
+    const pts = h.type === 'positive' ? h.pts : -h.pts;
+    showToast(h.type === 'positive' ? `${h.icon} +${h.pts} pts` : `${h.icon} -${h.pts} pts`);
+  }
+  updateStreak();
+  save();
+  render();
+}
+
+// Long press for edit on mobile
+let lpTimer = null;
+function startLongPress(id, e) {
+  lpTimer = setTimeout(() => {
+    lpTimer = null;
+    openEditModal(id);
+  }, 600);
+}
+function cancelLongPress() {
+  if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'stats') renderStats();
+  if (name === 'reminders') renderReminders();
+}
+
+// ─── Habit Modal ──────────────────────────────────────────────────────────────
+let editingHabitId = null;
+let selectedType = 'positive';
+let selectedEmoji = '🏃';
+
+function openAddModal(type) {
+  editingHabitId = null;
+  document.getElementById('modal-title').textContent = 'New habit';
+  document.getElementById('habit-name-input').value = '';
+  document.getElementById('habit-pts-input').value = 5;
+  document.getElementById('habit-modal-actions').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
+    <button class="btn-primary" onclick="saveHabit()">Save habit</button>
+  `;
+  setType(type || 'positive');
+  selectedEmoji = EMOJIS[0];
+  renderEmojiGrid();
+  openModal('habit-modal');
+}
+
+function openEditModal(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  editingHabitId = id;
+  document.getElementById('modal-title').textContent = 'Edit habit';
+  document.getElementById('habit-name-input').value = h.name;
+  document.getElementById('habit-pts-input').value = h.pts;
+  setType(h.type);
+  selectedEmoji = h.icon;
+  document.getElementById('habit-modal-actions').innerHTML = `
+    <button class="btn-danger" onclick="deleteHabit('${id}')">Delete</button>
+    <button class="btn-primary" onclick="saveHabit()">Save</button>
+  `;
+  renderEmojiGrid();
+  openModal('habit-modal');
+}
+
+function setType(t) {
+  selectedType = t;
+  document.getElementById('type-pos').classList.toggle('selected', t === 'positive');
+  document.getElementById('type-neg').classList.toggle('selected', t === 'negative');
+}
+
+function renderEmojiGrid() {
+  document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  renderEmojiGrid();
+}
+
+function saveHabit() {
+  const name = document.getElementById('habit-name-input').value.trim();
+  const pts = Math.min(20, Math.max(1, parseInt(document.getElementById('habit-pts-input').value) || 5));
+  if (!name) { showToast('Give the habit a name'); return; }
+
+  if (editingHabitId) {
+    const h = state.habits.find(x => x.id === editingHabitId);
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; }
+  } else {
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji });
+  }
+  save();
+  closeModal('habit-modal');
+  render();
+  showToast(editingHabitId ? 'Habit updated' : '✅ Habit added');
+}
+
+function deleteHabit(id) {
+  if (!confirm('Delete this habit?')) return;
+  state.habits = state.habits.filter(h => h.id !== id);
+  save();
+  closeModal('habit-modal');
+  render();
+  showToast('Habit deleted');
+}
+
+// ─── Reminder Modal ───────────────────────────────────────────────────────────
+function openReminderModal() {
+  document.getElementById('reminder-label-input').value = '';
+  document.getElementById('reminder-time-input').value = '08:00';
+  openModal('reminder-modal');
+}
+
+function saveReminder() {
+  const label = document.getElementById('reminder-label-input').value.trim() || 'Habit check-in';
+  const time = document.getElementById('reminder-time-input').value;
+  const days = document.getElementById('reminder-days').value;
+
+  const r = { id: 'r' + Date.now(), label, time, days, on: true };
+  state.reminders.push(r);
+  save();
+  closeModal('reminder-modal');
+  scheduleReminder(r);
+  renderReminders();
+  showToast('🔔 Reminder saved');
+}
+
+function toggleReminder(id) {
+  const r = state.reminders.find(x => x.id === id);
+  if (!r) return;
+  r.on = !r.on;
+  save();
+  renderReminders();
+  if (r.on) scheduleReminder(r);
+}
+
+function deleteReminder(id) {
+  state.reminders = state.reminders.filter(r => r.id !== id);
+  save();
+  renderReminders();
+  showToast('Reminder removed');
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+function renderNotifBanner(wrapperId) {
+  const el = document.getElementById(wrapperId);
+  if (!('Notification' in window) || Notification.permission === 'granted') {
+    el.innerHTML = ''; return;
+  }
+  if (Notification.permission === 'denied') {
+    el.innerHTML = `<div class="notif-banner"><p>🔕 Notifications blocked — enable in browser settings to use reminders.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="notif-banner">
+    <p>Enable notifications to receive habit reminders.</p>
+    <button onclick="requestNotifPermission()">Enable</button>
+  </div>`;
+}
+
+async function requestNotifPermission() {
+  const perm = await Notification.requestPermission();
+  renderNotifBanner('notif-banner-wrap');
+  renderNotifBanner('notif-banner-wrap2');
+  if (perm === 'granted') {
+    showToast('🔔 Notifications enabled');
+    state.reminders.filter(r => r.on).forEach(scheduleReminder);
+  }
+}
+
+// We use ServiceWorker + scheduled checks for reminders
+// On each page load, we check if any reminders should fire now/soon
+const scheduledTimers = {};
+
+function scheduleReminder(r) {
+  if (!r.on || Notification.permission !== 'granted') return;
+  if (scheduledTimers[r.id]) clearTimeout(scheduledTimers[r.id]);
+
+  const now = new Date();
+  const [hh, mm] = r.time.split(':').map(Number);
+  const next = new Date(now);
+  next.setHours(hh, mm, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+
+  // Check days filter
+  function shouldFireOn(date) {
+    const day = date.getDay(); // 0=Sun,6=Sat
+    if (r.days === 'weekdays') return day >= 1 && day <= 5;
+    if (r.days === 'weekends') return day === 0 || day === 6;
+    return true;
+  }
+
+  // Advance next until a valid day
+  let tries = 0;
+  while (!shouldFireOn(next) && tries < 8) { next.setDate(next.getDate() + 1); tries++; }
+
+  const ms = next - now;
+  if (ms > 0 && ms < 7 * 24 * 60 * 60 * 1000) {
+    scheduledTimers[r.id] = setTimeout(() => {
+      fireNotification(r);
+      // Reschedule for next occurrence
+      setTimeout(() => scheduleReminder(r), 2000);
+    }, ms);
+  }
+}
+
+function fireNotification(r) {
+  if (Notification.permission !== 'granted') return;
+  const score = calcScore(todayKey());
+  const body = score > 0
+    ? `You're up ${score} pts today. Keep the momentum!`
+    : `Time to build those habits. Your streak depends on it! 🔥`;
+  new Notification(`⏰ ${r.label}`, { body, icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>' });
+}
+
+// Reschedule on load
+function initReminders() {
+  if (Notification.permission === 'granted') {
+    state.reminders.filter(r => r.on).forEach(scheduleReminder);
+  }
+}
+
+// ─── Reset today ──────────────────────────────────────────────────────────────
+document.getElementById('reset-day-btn').addEventListener('click', () => {
+  if (!confirm('Reset all of today\'s logs?')) return;
+  delete state.log[todayKey()];
+  save();
+  render();
+  showToast('Today reset');
+});
+
+// ─── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  setTimeout(() => document.querySelector(`#${id} input`).focus(), 100);
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── Seed sample habits for new users ────────────────────────────────────────
+function seedIfEmpty() {
+  if (state.habits.length === 0) {
+    state.habits = [
+      { id: 'h1', name: 'Morning exercise', pts: 10, type: 'positive', icon: '🏃' },
+      { id: 'h2', name: 'Drink 8 glasses of water', pts: 5, type: 'positive', icon: '💧' },
+      { id: 'h3', name: 'Read for 20 minutes', pts: 5, type: 'positive', icon: '📚' },
+      { id: 'h4', name: 'Skipped junk food', pts: 8, type: 'positive', icon: '🥗' },
+      { id: 'h5', name: 'Too much screen time', pts: 5, type: 'negative', icon: '📱' },
+    ];
+    save();
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+seedIfEmpty();
+updateStreak();
+render();
+initReminders();
+</script>
+</body>
+</html>
