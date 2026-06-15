@@ -801,29 +801,49 @@ async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
     swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-    console.log('SW registered', swReg.scope);
     // Wait for SW to be active
-    if (swReg.installing) {
-      await new Promise(res => {
-        swReg.installing.addEventListener('statechange', e => {
-          if (e.target.state === 'activated') res();
-        });
-      });
+    const sw = swReg.installing || swReg.waiting || swReg.active;
+    if (sw && sw.state !== 'activated') {
+      await new Promise(res => sw.addEventListener('statechange', e => {
+        if (e.target.state === 'activated') res();
+      }));
     }
+    // Refresh swReg.active reference after activation
+    swReg = await navigator.serviceWorker.getRegistration('./');
+
     pushRemindersToSW();
 
-    // Try periodic sync (Android Chrome)
+    // Listen for GET_REMINDERS requests from the SW
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.type === 'GET_REMINDERS') pushRemindersToSW();
+    });
+
+    // Heartbeat: send reminders every 60s while page is open
+    // This is the key mechanism — each heartbeat triggers checkDue() in SW
+    setInterval(pushHeartbeat, 60 * 1000);
+
+    // Try periodic sync (Android Chrome background wake)
     if ('periodicSync' in swReg) {
       try {
-        await swReg.periodicSync.register('habit-check', { minInterval: 60 * 60 * 1000 });
-      } catch (e) { /* not supported or permission denied */ }
+        await swReg.periodicSync.register('habit-check', { minInterval: 60 * 1000 });
+      } catch (e) { /* permission not granted */ }
     }
   } catch (e) { console.warn('SW registration failed:', e); }
 }
 
+function getActiveSW() {
+  return swReg?.active || navigator.serviceWorker?.controller;
+}
+
 function pushRemindersToSW() {
-  if (!swReg?.active) return;
-  swReg.active.postMessage({ type: 'SCHEDULE', reminders: state.reminders });
+  const sw = getActiveSW();
+  if (!sw) return;
+  sw.postMessage({ type: 'SCHEDULE', reminders: state.reminders });
+}
+
+function pushHeartbeat() {
+  const sw = getActiveSW();
+  if (sw) sw.postMessage({ type: 'HEARTBEAT' });
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────
@@ -854,14 +874,13 @@ async function testNotification() {
     await requestNotifPermission();
     if (Notification.permission !== 'granted') return;
   }
-  if (swReg?.active) {
-    swReg.active.postMessage({ type: 'FIRE_TEST' });
-    showToast('Test notification sent');
+  const sw = getActiveSW();
+  if (sw) {
+    sw.postMessage({ type: 'FIRE_TEST' });
   } else {
-    // Fallback direct notification
     new Notification('🔔 Test notification', { body: 'Notifications are working!' });
-    showToast('Test notification sent');
   }
+  showToast('Test notification sent');
 }
 
 // ─── Reset ────────────────────────────────────────────────────────────────────
