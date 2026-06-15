@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Streak">
 <meta name="theme-color" content="#0f0f12">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <title>Streak — Habit Tracker</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=Inter:wght@400;500;600&display=swap');
@@ -86,7 +89,7 @@
   .empty { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border); border-radius: 14px; margin-bottom: 8px; }
 
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,18,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); justify-content: space-around; z-index: 100; }
-  .nav-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 20px; border-radius: 10px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
+  .nav-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 0; flex: 1; border-radius: 10px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
   .nav-btn.active { color: var(--accent); }
   .nav-btn .icon { font-size: 22px; }
 
@@ -904,6 +907,31 @@ seedIfEmpty();
 updateStreak();
 render();
 registerSW();
+</script>
+<script>
+// Generate PNG icons from SVG via canvas and store in cache for SW/manifest
+async function generateIcons() {
+  if (!('caches' in window)) return;
+  const svgUrl = './icon.svg';
+  const sizes = [192, 512];
+  try {
+    const cache = await caches.open('streak-icons-v1');
+    for (const size of sizes) {
+      const key = `./icon-${size}.png`;
+      if (await cache.match(key)) continue; // already generated
+      const img = new Image();
+      img.src = svgUrl;
+      await new Promise(res => { img.onload = res; img.onerror = res; });
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      await cache.put(key, new Response(blob, { headers: { 'Content-Type': 'image/png' } }));
+    }
+  } catch {}
+}
+generateIcons();
 </script>
 </body>
 </html>
