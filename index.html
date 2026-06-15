@@ -158,6 +158,22 @@
   .notif-banner button { background: var(--accent); color: #0f0f12; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
   select option { background: #1a1a20; }
+
+  /* Settings */
+  .settings-group { margin-bottom: 28px; }
+  .settings-group-title { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; }
+  .settings-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 2px; }
+  .settings-item { display: flex; align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+  .settings-item-info { flex: 1; }
+  .settings-item-label { font-weight: 500; font-size: 15px; }
+  .settings-item-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .settings-item-action { flex-shrink: 0; }
+  .settings-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .settings-btn:active { opacity: 0.7; }
+  .settings-btn.danger { background: var(--negative-dim); border-color: rgba(248,113,113,0.3); color: var(--negative); }
+  .settings-version { text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 32px; }
 </style>
 </head>
 <body>
@@ -190,7 +206,6 @@
         <strong id="streak-count">0</strong>
         <p id="streak-label">Start your streak today</p>
       </div>
-      <button class="reset-day-btn" id="reset-day-btn">↺ reset</button>
     </div>
 
     <div id="notif-banner-wrap"></div>
@@ -223,15 +238,107 @@
     <div id="history-list"></div>
   </div>
 
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <header>
+      <div>
+        <div class="wordmark">settings<span>.</span></div>
+        <div class="date-label">manage your data</div>
+      </div>
+    </header>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Day</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">↺</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Reset today</div>
+            <div class="settings-item-desc">Clear all of today's logged habit counts</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="resetToday()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Notifications</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">🔔</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Permission</div>
+            <div class="settings-item-desc" id="notif-status-desc">Checking…</div>
+          </div>
+          <div class="settings-item-action" id="notif-status-action"></div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">🧪</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Send test notification</div>
+            <div class="settings-item-desc">Confirm notifications are working</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="testNotification()">Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Data</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">📤</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Export data</div>
+            <div class="settings-item-desc">Download all habits and history as JSON</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="exportData()">Export</button>
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">📥</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Import data</div>
+            <div class="settings-item-desc">Restore from a previously exported file</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="document.getElementById('import-file').click()">Import</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">🗑️</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Clear all data</div>
+            <div class="settings-item-desc">Delete all habits, logs, and streak history</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn danger" onclick="clearAllData()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-version">streak · v3</div>
+  </div>
+
 </div>
 
-<!-- Bottom nav (2 tabs now) -->
+<!-- Bottom nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('today', this)">
     <span class="icon">✦</span>Today
   </button>
   <button class="nav-btn" onclick="switchTab('stats', this)">
     <span class="icon">📊</span>Progress
+  </button>
+  <button class="nav-btn" onclick="switchTab('settings', this)">
+    <span class="icon">⚙️</span>Settings
   </button>
 </nav>
 
@@ -469,6 +576,7 @@ function switchTab(name, btn) {
   document.getElementById('panel-' + name).classList.add('active');
   btn.classList.add('active');
   if (name === 'stats') renderStats();
+  if (name === 'settings') renderNotifStatus();
 }
 
 // ─── Habit modal ──────────────────────────────────────────────────────────────
@@ -668,15 +776,91 @@ function renderNotifBanner() {
 async function requestNotifPermission() {
   const perm = await Notification.requestPermission();
   renderNotifBanner();
+  renderNotifStatus();
   if (perm === 'granted') { showToast('🔔 Notifications enabled'); pushRemindersToSW(); }
 }
 
-// ─── Reset ────────────────────────────────────────────────────────────────────
-document.getElementById('reset-day-btn').addEventListener('click', () => {
-  if (!confirm("Reset all of today's logs?")) return;
+// ─── Settings ─────────────────────────────────────────────────────────────────
+function resetToday() {
+  if (!confirm("Clear all of today's logged counts?")) return;
   delete state.log[todayKey()];
   save(); render(); showToast('Today reset');
-});
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL habits, logs, and streaks? This cannot be undone.')) return;
+  localStorage.removeItem('streak_v3');
+  state = { habits: [], log: {}, streak: 0, lastActive: null };
+  pushRemindersToSW();
+  render();
+  showToast('All data cleared');
+}
+
+function exportData() {
+  const payload = { version: 3, exported: new Date().toISOString(), ...state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = `streak-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Data exported');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data.habits)) throw new Error('Invalid file');
+      if (!confirm(`Import ${data.habits.length} habits? This will replace your current data.`)) return;
+      state = {
+        habits: data.habits || [],
+        log: data.log || {},
+        streak: data.streak || 0,
+        lastActive: data.lastActive || null
+      };
+      save();
+      pushRemindersToSW();
+      render();
+      showToast(`📥 Imported ${data.habits.length} habits`);
+    } catch {
+      showToast('⚠️ Invalid backup file');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function testNotification() {
+  const sw = getActiveSW();
+  if (sw) sw.postMessage({ type: 'FIRE_TEST' });
+  else new Notification('🔔 Test notification', { body: 'Notifications are working!' });
+  showToast('Test sent');
+}
+
+function renderNotifStatus() {
+  const desc = document.getElementById('notif-status-desc');
+  const action = document.getElementById('notif-status-action');
+  if (!desc) return;
+  if (!('Notification' in window)) {
+    desc.textContent = 'Not supported in this browser';
+    action.innerHTML = ''; return;
+  }
+  if (Notification.permission === 'granted') {
+    desc.textContent = 'Notifications are enabled';
+    action.innerHTML = '';
+  } else if (Notification.permission === 'denied') {
+    desc.textContent = 'Blocked — enable in device settings';
+    action.innerHTML = '';
+  } else {
+    desc.textContent = 'Not yet granted';
+    action.innerHTML = `<button class="settings-btn" onclick="requestNotifPermission()">Enable</button>`;
+  }
+}
 
 // ─── Modal helpers ────────────────────────────────────────────────────────────
 function openModal(id) {
