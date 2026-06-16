@@ -131,6 +131,10 @@
   .type-btn.pos.selected { background: var(--positive-dim); border-color: var(--positive); color: var(--positive); }
   .type-btn.neg.selected { background: var(--negative-dim); border-color: var(--negative); color: var(--negative); }
 
+  .emoji-custom-row { margin-bottom: 8px; }
+  .emoji-custom-row input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 22px; outline: none; }
+  .emoji-custom-row input:focus { border-color: var(--accent); }
+  .emoji-custom-row input::placeholder { font-size: 13px; color: var(--muted); }
   .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; background: var(--surface2); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
   .emoji-opt { font-size: 22px; text-align: center; padding: 4px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
   .emoji-opt:active, .emoji-opt.selected { background: var(--accent-dim); }
@@ -372,6 +376,9 @@
     </div>
     <div class="field">
       <label>Icon</label>
+      <div class="emoji-custom-row">
+        <input type="text" id="emoji-custom-input" placeholder="Or type any emoji…" maxlength="4" oninput="onCustomEmoji(this)">
+      </div>
       <div class="emoji-grid" id="emoji-grid"></div>
     </div>
 
@@ -614,6 +621,7 @@ function openAddModal(type) {
   setType(type || 'positive');
   selectedEmoji = EMOJIS[0];
   renderEmojiGrid();
+  document.getElementById('emoji-custom-input').value = '';
   setReminderUI(false, { schedule: 'once', time: '08:00', from: '08:00', to: '20:00' });
   openModal('habit-modal');
 }
@@ -683,8 +691,25 @@ function renderEmojiGrid() {
   document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e =>
     `<div class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
   ).join('');
+  // Sync custom input: clear it if selection is from the grid
+  const customInput = document.getElementById('emoji-custom-input');
+  if (customInput) customInput.value = EMOJIS.includes(selectedEmoji) ? '' : selectedEmoji;
 }
-function selectEmoji(e) { selectedEmoji = e; renderEmojiGrid(); }
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.getElementById('emoji-custom-input').value = '';
+  renderEmojiGrid();
+}
+
+function onCustomEmoji(input) {
+  // Extract first emoji/character from input
+  const val = [...input.value.trim()][0] || '';
+  if (!val) return;
+  selectedEmoji = val;
+  // Deselect grid
+  document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+}
 
 function saveHabit() {
   const name = document.getElementById('habit-name-input').value.trim();
