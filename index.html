@@ -185,6 +185,16 @@
   .settings-btn:active { opacity: 0.7; }
   .settings-btn.danger { background: var(--negative-dim); border-color: rgba(248,113,113,0.3); color: var(--negative); }
   .settings-version { text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 32px; }
+
+  /* Personal bests */
+  .pb-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .pb-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+  .pb-info { flex: 1; min-width: 0; }
+  .pb-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pb-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pb-value { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+  .pb-value.count { color: var(--positive); }
+  .pb-overall { background: var(--accent-dim); border-color: rgba(167,139,250,0.3); }
 </style>
 </head>
 <body>
@@ -248,6 +258,11 @@
     </div>
     <div id="bar-chart" class="bar-chart"></div>
     <div id="bar-labels" class="bar-labels"></div>
+
+    <div class="section-head" style="margin-top:28px;">
+      <span class="section-title">🏆 Personal bests</span>
+    </div>
+    <div id="pb-list"></div>
   </div>
 
   <!-- SETTINGS -->
@@ -537,7 +552,7 @@ function renderHabitList(type) {
 
 function renderStats() {
   const days = [];
-  let totalPos = 0, bestScore = 0;
+  let totalPos = 0;
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -545,18 +560,20 @@ function renderStats() {
     const label = i === 0 ? 'Today' : d.toLocaleDateString('en-AU',{weekday:'short'});
     days.push({ label, score: s, isToday: i === 0 });
     if (s > 0) totalPos += s;
-    if (s > bestScore) bestScore = s;
   }
+
+  // All-time best score
+  const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
 
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-value gold">${state.streak}</div><div class="stat-name">Day streak</div></div>
     <div class="stat-card"><div class="stat-value green">+${totalPos}</div><div class="stat-name">Points gained (7d)</div></div>
-    <div class="stat-card"><div class="stat-value purple">${bestScore || 0}</div><div class="stat-name">Best day score</div></div>
+    <div class="stat-card"><div class="stat-value purple">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
     <div class="stat-card"><div class="stat-value">${state.habits.length}</div><div class="stat-name">Habits tracked</div></div>
   `;
 
   const maxScore = Math.max(...days.map(d => Math.abs(d.score)), 1);
-  const chartH = 148; // px available for bars (180 - 28 label area - 4 val)
+  const chartH = 148;
 
   document.getElementById('bar-chart').innerHTML = days.map(d => {
     const col = d.score < 0 ? '#f87171' : d.score === 0 ? '#2e2e38' : d.isToday ? '#a78bfa' : '#6b6b80';
@@ -571,9 +588,71 @@ function renderStats() {
   document.getElementById('bar-labels').innerHTML = days.map(d =>
     `<div class="bar-label-cell ${d.isToday ? 'today' : ''}">${d.isToday ? 'today' : d.label}</div>`
   ).join('');
+
+  renderPersonalBests();
 }
 
-// ─── Adjust habit ─────────────────────────────────────────────────────────────
+function calcPersonalBests() {
+  // Returns { overall: { score, date }, habits: { [id]: { count, date } } }
+  const bests = { overall: { score: 0, date: null }, habits: {} };
+  for (const h of state.habits) bests.habits[h.id] = { count: 0, date: null };
+
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    const score = calcScore(dateKey);
+    if (score > bests.overall.score) { bests.overall.score = score; bests.overall.date = dateKey; }
+    for (const h of state.habits) {
+      const count = log[h.id] || 0;
+      if (count > (bests.habits[h.id]?.count || 0)) {
+        bests.habits[h.id] = { count, date: dateKey };
+      }
+    }
+  }
+  return bests;
+}
+
+function formatDateKey(key) {
+  if (!key) return '—';
+  const d = new Date(key + 'T00:00:00');
+  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function renderPersonalBests() {
+  const bests = calcPersonalBests();
+  const el = document.getElementById('pb-list');
+  if (!el) return;
+
+  let html = '';
+
+  // Overall best day
+  html += `<div class="pb-card pb-overall">
+    <div class="pb-icon">🏆</div>
+    <div class="pb-info">
+      <div class="pb-name">Best day score</div>
+      <div class="pb-date">${formatDateKey(bests.overall.date)}</div>
+    </div>
+    <div class="pb-value">${bests.overall.score > 0 ? '+' : ''}${bests.overall.score}</div>
+  </div>`;
+
+  // Per-habit bests (positive habits by count, skip negatives)
+  const positives = state.habits.filter(h => h.type === 'positive');
+  if (positives.length) {
+    for (const h of positives) {
+      const pb = bests.habits[h.id];
+      html += `<div class="pb-card">
+        <div class="pb-icon">${h.icon}</div>
+        <div class="pb-info">
+          <div class="pb-name">${h.name}</div>
+          <div class="pb-date">${pb?.count > 0 ? formatDateKey(pb.date) : 'No logs yet'}</div>
+        </div>
+        <div class="pb-value count">×${pb?.count || 0}</div>
+      </div>`;
+    }
+  }
+
+  el.innerHTML = html || '<div class="empty">Log some habits to see personal bests</div>';
+}
+
+
 function adjustHabit(id, delta) {
   const key = todayKey();
   if (!state.log[key]) state.log[key] = {};
