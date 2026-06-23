@@ -66,9 +66,13 @@
   .add-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 18px; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .add-btn:active { background: var(--surface2); }
 
-  .habit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .habit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; -webkit-tap-highlight-color: transparent; user-select: none; transition: opacity 0.15s, transform 0.15s; }
   .habit-card.positive { border-left: 3px solid var(--positive); }
   .habit-card.negative { border-left: 3px solid var(--negative); }
+  .habit-card.dragging { opacity: 0.4; }
+  .habit-card.drag-over { border-color: var(--accent); }
+  .drag-handle { color: var(--border); font-size: 18px; cursor: grab; flex-shrink: 0; padding: 0 2px; touch-action: none; line-height: 1; }
+  .drag-handle:active { cursor: grabbing; color: var(--muted); }
   .habit-icon { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
   .habit-info { flex: 1; min-width: 0; }
   .habit-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -168,7 +172,12 @@
   .notif-banner p { font-size: 13px; color: var(--text); flex: 1; }
   .notif-banner button { background: var(--accent); color: #0f0f12; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
-  select option { background: #1a1a20; }
+  .sort-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; height: 28px; padding: 0 8px; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .sort-btn:active, .sort-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .tally-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tally-chip { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .tally-chip .chip-icon { font-size: 14px; }
+  .tally-chip .chip-count { font-weight: 500; color: var(--text); }
 
   /* Settings */
   .settings-group { margin-bottom: 28px; }
@@ -233,13 +242,19 @@
 
     <div class="section-head">
       <span class="section-title">✅ Good habits</span>
-      <button class="add-btn" onclick="openAddModal('positive')">＋</button>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="sort-btn" id="sort-pos-btn" onclick="cycleSort('positive')" title="Sort by tally">↕</button>
+        <button class="add-btn" onclick="openAddModal('positive')">＋</button>
+      </div>
     </div>
     <div id="positive-list"></div>
 
     <div class="section-head">
       <span class="section-title">⚠️ Break these</span>
-      <button class="add-btn" onclick="openAddModal('negative')">＋</button>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="sort-btn" id="sort-neg-btn" onclick="cycleSort('negative')" title="Sort by tally">↕</button>
+        <button class="add-btn" onclick="openAddModal('negative')">＋</button>
+      </div>
     </div>
     <div id="negative-list"></div>
   </div>
@@ -468,6 +483,20 @@ const todayKey = () => {
 };
 const todayLog = () => state.log[todayKey()] || {};
 
+// sort: 'manual' | 'az' | 'za' | 'asc' | 'desc'
+const sortState = { positive: 'manual', negative: 'manual' };
+
+function cycleSort(type) {
+  const order = ['manual', 'az', 'za', 'asc', 'desc'];
+  const cur = sortState[type];
+  sortState[type] = order[(order.indexOf(cur) + 1) % order.length];
+  const labels = { manual: '↕', az: 'A↑', za: 'A↓', asc: '#↑', desc: '#↓' };
+  const btn = document.getElementById(`sort-${type === 'positive' ? 'pos' : 'neg'}-btn`);
+  btn.textContent = labels[sortState[type]];
+  btn.classList.toggle('active', sortState[type] !== 'manual');
+  renderHabitList(type);
+}
+
 // ─── Streak ───────────────────────────────────────────────────────────────────
 function updateStreak() {
   const today = todayKey();
@@ -518,11 +547,20 @@ function renderToday() {
 }
 
 function renderHabitList(type) {
-  const el = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
-  const habits = state.habits.filter(h => h.type === type);
-  if (!habits.length) { el.innerHTML = `<div class="empty">Tap + to add a habit</div>`; return; }
+  const listEl = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
+  let habits = state.habits.filter(h => h.type === type);
+  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add a habit</div>`; return; }
+
   const log = todayLog();
-  el.innerHTML = habits.map(h => {
+
+  // Apply sort
+  const sort = sortState[type];
+  if (sort === 'az') habits = [...habits].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'za') habits = [...habits].sort((a, b) => b.name.localeCompare(a.name));
+  else if (sort === 'asc') habits = [...habits].sort((a, b) => (log[a.id] || 0) - (log[b.id] || 0));
+  else if (sort === 'desc') habits = [...habits].sort((a, b) => (log[b.id] || 0) - (log[a.id] || 0));
+
+  listEl.innerHTML = habits.map(h => {
     const count = log[h.id] || 0;
     const pts = h.type === 'positive' ? h.pts : -h.pts;
     const total = count * pts;
@@ -531,11 +569,13 @@ function renderHabitList(type) {
     const bellStr = hasReminder ? ' · 🔔' : '';
     const metaStr = count === 0 ? `hold to edit${bellStr}` : `×${count} = ${totalStr} pts · hold to edit${bellStr}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
-    return `<div class="habit-card ${type}"
+    const draggable = sort === 'manual';
+    return `<div class="habit-card ${type}" data-id="${h.id}"
       oncontextmenu="openEditModal('${h.id}'); return false;"
-      ontouchstart="startLongPress('${h.id}')"
-      ontouchend="cancelLongPress()"
-      ontouchmove="cancelLongPress()">
+      ontouchstart="onCardTouchStart(event, '${h.id}')"
+      ontouchend="onCardTouchEnd(event)"
+      ontouchmove="onCardTouchMove(event)">
+      <div class="drag-handle" data-drag="${h.id}" style="${draggable ? '' : 'opacity:0.2;pointer-events:none;'}">⠿</div>
       <div class="habit-icon">${h.icon}</div>
       <div class="habit-info">
         <div class="habit-name">${h.name}</div>
@@ -548,6 +588,8 @@ function renderHabitList(type) {
       </div>
     </div>`;
   }).join('');
+
+  if (sort === 'manual') initDragForList(listEl);
 }
 
 function renderStats() {
@@ -670,10 +712,133 @@ function adjustHabit(id, delta) {
   render();
 }
 
-// ─── Long press ───────────────────────────────────────────────────────────────
+// ─── Long press + drag ────────────────────────────────────────────────────────
 let lpTimer = null;
-function startLongPress(id) { lpTimer = setTimeout(() => { lpTimer = null; openEditModal(id); }, 600); }
+let dragging = null; // { id, el, ghost, listEl, startY, lastIndex }
+
+function onCardTouchStart(e, id) {
+  const handle = e.target.closest('[data-drag]');
+  if (handle) {
+    // Start drag from handle
+    e.preventDefault();
+    startDrag(e.touches[0], id, e.target.closest('.habit-card'));
+    return;
+  }
+  // Long press for edit
+  lpTimer = setTimeout(() => { lpTimer = null; openEditModal(id); }, 600);
+}
+
+function onCardTouchEnd(e) {
+  cancelLongPress();
+  if (dragging) endDrag();
+}
+
+function onCardTouchMove(e) {
+  if (dragging) {
+    e.preventDefault();
+    moveDrag(e.touches[0]);
+    return;
+  }
+  cancelLongPress();
+}
+
 function cancelLongPress() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }
+
+// ─── Drag implementation ──────────────────────────────────────────────────────
+function startDrag(touch, id, cardEl) {
+  cancelLongPress();
+  const listEl = cardEl.parentElement;
+  const rect = cardEl.getBoundingClientRect();
+
+  // Ghost clone
+  const ghost = cardEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;
+    opacity:0.9;z-index:500;pointer-events:none;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    transition:none;`;
+  document.body.appendChild(ghost);
+
+  cardEl.classList.add('dragging');
+
+  dragging = {
+    id, el: cardEl, ghost, listEl,
+    offsetY: touch.clientY - rect.top,
+    lastIndex: [...listEl.children].indexOf(cardEl)
+  };
+}
+
+function moveDrag(touch) {
+  if (!dragging) return;
+  const { ghost, listEl, offsetY, el } = dragging;
+  const y = touch.clientY - offsetY;
+  ghost.style.top = y + 'px';
+
+  // Find which card we're over
+  const cards = [...listEl.querySelectorAll('.habit-card:not(.dragging)')];
+  let targetIndex = cards.length;
+  for (let i = 0; i < cards.length; i++) {
+    const r = cards[i].getBoundingClientRect();
+    if (touch.clientY < r.top + r.height / 2) { targetIndex = i; break; }
+  }
+
+  // Remove drag-over highlights
+  cards.forEach(c => c.classList.remove('drag-over'));
+  if (targetIndex < cards.length) cards[targetIndex].classList.add('drag-over');
+
+  dragging.targetIndex = targetIndex;
+  dragging.cards = cards;
+}
+
+function endDrag() {
+  if (!dragging) return;
+  const { id, el, ghost, listEl, targetIndex, cards } = dragging;
+  dragging = null;
+
+  ghost.remove();
+  el.classList.remove('dragging');
+  if (cards) cards.forEach(c => c.classList.remove('drag-over'));
+
+  if (targetIndex === undefined) return;
+
+  // Reorder state.habits within the same type group
+  const type = el.classList.contains('positive') ? 'positive' : 'negative';
+  const typeHabits = state.habits.filter(h => h.type === type);
+  const others = state.habits.filter(h => h.type !== type);
+  const fromIdx = typeHabits.findIndex(h => h.id === id);
+  if (fromIdx === -1) return;
+
+  const [moved] = typeHabits.splice(fromIdx, 1);
+  typeHabits.splice(targetIndex, 0, moved);
+
+  // Rebuild state.habits preserving relative order of other type
+  // Keep original interleaving position of other types
+  const newHabits = [];
+  let pi = 0, ni = 0;
+  const pos = type === 'positive' ? typeHabits : state.habits.filter(h => h.type === 'positive');
+  const neg = type === 'negative' ? typeHabits : state.habits.filter(h => h.type === 'negative');
+  // Simple: positives first then negatives, preserving each group's order
+  state.habits = [...pos, ...neg];
+
+  save();
+  renderHabitList('positive');
+  renderHabitList('negative');
+}
+
+// ─── Desktop drag (mouse) for testing ────────────────────────────────────────
+function initDragForList(listEl) {
+  listEl.querySelectorAll('[data-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const cardEl = handle.closest('.habit-card');
+      const id = handle.dataset.drag;
+      startDrag(e, id, cardEl);
+
+      const onMove = e => moveDrag(e);
+      const onUp = () => { endDrag(); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
 
 // ─── Tab ──────────────────────────────────────────────────────────────────────
 function switchTab(name, btn) {
