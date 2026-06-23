@@ -366,7 +366,23 @@
       </div>
     </div>
 
-    <div class="settings-version">streak · v3</div>
+    <div class="settings-group">
+      <div class="settings-group-title">App</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">🔄</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Update app</div>
+            <div class="settings-item-desc">Saves your data, clears cache, and reloads the latest version</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="updateApp()">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
   </div>
 
 </div>
@@ -1014,7 +1030,45 @@ function buildReminders() {
   return list;
 }
 
-// ─── Service Worker ───────────────────────────────────────────────────────────
+async function updateApp() {
+  if (!confirm('This will save your data, clear the app cache, and reload. Continue?')) return;
+
+  // 1. Snapshot current state to sessionStorage so it survives the reload
+  sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
+
+  // 2. Unregister service workers so the new SW is fetched fresh
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  }
+
+  // 3. Clear all caches
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+
+  // 4. Reload — on return, restoreAfterUpdate() will re-import
+  location.reload(true);
+}
+
+function restoreAfterUpdate() {
+  const raw = sessionStorage.getItem('streak_update_restore');
+  if (!raw) return;
+  sessionStorage.removeItem('streak_update_restore');
+  try {
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.habits)) return;
+    state = {
+      habits: data.habits || [],
+      log: data.log || {},
+      streak: data.streak || 0,
+      lastActive: data.lastActive || null
+    };
+    save();
+    showToast('✅ Data restored after update');
+  } catch {}
+}
 let swReg = null;
 
 async function registerSW() {
@@ -1190,6 +1244,7 @@ function seedIfEmpty() {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 seedIfEmpty();
+restoreAfterUpdate();
 updateStreak();
 render();
 registerSW();
