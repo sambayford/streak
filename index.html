@@ -204,6 +204,15 @@
   .pb-value { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
   .pb-value.count { color: var(--positive); }
   .pb-overall { background: var(--accent-dim); border-color: rgba(167,139,250,0.3); }
+
+  /* Changelog */
+  .changelog { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .cl-entry { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .cl-entry:last-child { border-bottom: none; }
+  .cl-version { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .cl-list { list-style: none; padding: 0; margin: 0; }
+  .cl-list li { font-size: 13px; color: var(--muted); padding: 2px 0 2px 14px; position: relative; line-height: 1.5; }
+  .cl-list li::before { content: '·'; position: absolute; left: 0; color: var(--border); }
 </style>
 </head>
 <body>
@@ -382,6 +391,204 @@
       </div>
     </div>
 
+    <div class="settings-group">
+      <div class="settings-group-title">What's new</div>
+      <div class="changelog">
+
+        <div class="cl-entry">
+          <div class="cl-version">v22 — Current</div>
+          <ul class="cl-list">
+            <li>Changelog renumbered so every HTML file output counts as a version</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v21</div>
+          <ul class="cl-list">
+            <li>Fixed stray &lt;/div&gt; inside v2 changelog entry causing broken layout</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v20</div>
+          <ul class="cl-list">
+            <li>Changelog added to settings with full version history</li>
+            <li>Tally sort and alphabetical sort both available via ↕ button</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v19</div>
+          <ul class="cl-list">
+            <li>Tally chips at top of each section removed</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v18</div>
+          <ul class="cl-list">
+            <li>Sort by tally (low→high, high→low) and alphabetically (A↑, A↓)</li>
+            <li>Tally chip row added below section headers showing today's counts</li>
+            <li>Drag handle dims and disables when a sort is active</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v17</div>
+          <ul class="cl-list">
+            <li>Drag to reorder habits within each group</li>
+            <li>Long-press still opens edit modal; drag handle initiates reorder</li>
+            <li>Desktop mouse drag also supported</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v16</div>
+          <ul class="cl-list">
+            <li>Personal best tracking per positive habit (highest single-day count)</li>
+            <li>Overall best day score tracks across all history</li>
+            <li>Personal bests section added to Progress tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v15</div>
+          <ul class="cl-list">
+            <li>7-day history switched to vertical bar chart</li>
+            <li>Today's bar highlighted in purple on the right</li>
+            <li>Best day stat card now uses all-time data, not just last 7 days</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v14</div>
+          <ul class="cl-list">
+            <li>Fixed day rollover using local device timezone instead of UTC</li>
+            <li>Streak yesterday calculation also fixed for local time</li>
+            <li>7-day history dates fixed to match local calendar</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v13</div>
+          <ul class="cl-list">
+            <li>SW rewritten to use flat reminder list generated from habits</li>
+            <li>Hourly reminders expanded into individual per-hour entries</li>
+            <li>Reminders tab fully removed; two-tab nav (Today, Progress)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v12</div>
+          <ul class="cl-list">
+            <li>Per-habit reminders added to habit editor (once, weekdays, weekends, hourly)</li>
+            <li>Hourly mode lets you set a from/to time range</li>
+            <li>🔔 badge shown on habit card when reminder is active</li>
+            <li>Settings tab added with reset, notifications, export, import, clear data</li>
+            <li>Update app button: saves data, clears cache, reloads, restores data</li>
+            <li>Data export downloads a dated JSON backup file</li>
+            <li>Data import restores from a backup with confirmation</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v11</div>
+          <ul class="cl-list">
+            <li>Nav tab alignment fixed — equal width flex tabs, no padding offset</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v10</div>
+          <ul class="cl-list">
+            <li>SW v2: heartbeat every 60s while app is open triggers time check</li>
+            <li>SW now receives full reminder list via SCHEDULE message</li>
+            <li>Page listens for GET_REMINDERS from SW and responds</li>
+            <li>periodicSync registered at 1-minute interval for Android background wake</li>
+            <li>Test notification button added to Reminders tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v9</div>
+          <ul class="cl-list">
+            <li>Service worker added for background notifications (sw.js)</li>
+            <li>Reminders tab with per-reminder on/off toggle and delete</li>
+            <li>Notification permission banner shown if not yet granted</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v8</div>
+          <ul class="cl-list">
+            <li>Undo removed — + and − buttons serve the same purpose</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v7</div>
+          <ul class="cl-list">
+            <li>Habits can be logged multiple times per day with + / − buttons</li>
+            <li>Count shown on card; running total displayed (×3 = +30 pts)</li>
+            <li>− button disabled at zero</li>
+            <li>Undo button in toast (later removed in v8)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v6</div>
+          <ul class="cl-list">
+            <li>Renamed output file to index.html for GitHub Pages</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v5</div>
+          <ul class="cl-list">
+            <li>Progress tab with 7-day horizontal bar history and stat cards</li>
+            <li>Three-tab nav: Today, Reminders, Progress</li>
+            <li>Streak logic and score ring</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v4</div>
+          <ul class="cl-list">
+            <li>Per-reminder on/off toggle and delete in Reminders tab</li>
+            <li>Notification permission banner</li>
+            <li>Reminders stored in state and persisted to localStorage</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v3</div>
+          <ul class="cl-list">
+            <li>Positive and negative habit types with colour coding</li>
+            <li>Points system: positive habits add, negative habits subtract</li>
+            <li>Long-press to edit or delete habits</li>
+            <li>Sample habits seeded on first launch</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v2</div>
+          <ul class="cl-list">
+            <li>Habit tracker app created as single HTML file</li>
+            <li>Add habits with name, points, and emoji icon</li>
+            <li>Daily check-off with streak counter</li>
+            <li>localStorage persistence</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v1</div>
+          <ul class="cl-list">
+            <li>Initial release — habit tracker PWA (habits.html)</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
 
   </div>
 
