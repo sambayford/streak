@@ -378,6 +378,16 @@
     <div class="settings-group">
       <div class="settings-group-title">App</div>
       <div class="settings-row">
+        <div class="settings-item" id="install-item" style="display:none">
+          <div class="settings-item-icon" id="install-icon">📲</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label" id="install-label">Install app</div>
+            <div class="settings-item-desc" id="install-desc">Add Streak to your home screen</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" id="install-btn" onclick="triggerInstall()">Install</button>
+          </div>
+        </div>
         <div class="settings-item">
           <div class="settings-item-icon">🔄</div>
           <div class="settings-item-info">
@@ -396,7 +406,16 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v22 — Current</div>
+          <div class="cl-version">v23 — Current</div>
+          <ul class="cl-list">
+            <li>Install / Reinstall button added to Settings</li>
+            <li>Shows "Install" in browser, "Reinstall" when already running as PWA</li>
+            <li>Button hidden if install prompt is unavailable</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v22</div>
           <ul class="cl-list">
             <li>Changelog renumbered so every HTML file output counts as a version</li>
           </ul>
@@ -1070,7 +1089,7 @@ function switchTab(name, btn) {
   document.getElementById('panel-' + name).classList.add('active');
   btn.classList.add('active');
   if (name === 'stats') renderStats();
-  if (name === 'settings') renderNotifStatus();
+  if (name === 'settings') { renderNotifStatus(); updateInstallUI(); }
 }
 
 // ─── Habit modal ──────────────────────────────────────────────────────────────
@@ -1330,7 +1349,53 @@ async function requestNotifPermission() {
   if (perm === 'granted') { showToast('🔔 Notifications enabled'); pushRemindersToSW(); }
 }
 
-// ─── Settings ─────────────────────────────────────────────────────────────────
+// ─── Install prompt ───────────────────────────────────────────────────────────
+let deferredInstallPrompt = null;
+const isPWA = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallUI();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallUI();
+});
+
+function updateInstallUI() {
+  const item = document.getElementById('install-item');
+  const label = document.getElementById('install-label');
+  const desc = document.getElementById('install-desc');
+  const btn = document.getElementById('install-btn');
+  const icon = document.getElementById('install-icon');
+
+  if (deferredInstallPrompt) {
+    item.style.display = 'flex';
+    if (isPWA()) {
+      icon.textContent = '🔁';
+      label.textContent = 'Reinstall app';
+      desc.textContent = 'Add a fresh shortcut to your home screen';
+      btn.textContent = 'Reinstall';
+    } else {
+      icon.textContent = '📲';
+      label.textContent = 'Install app';
+      desc.textContent = 'Add Streak to your home screen';
+      btn.textContent = 'Install';
+    }
+  } else {
+    item.style.display = 'none';
+  }
+}
+
+async function triggerInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') deferredInstallPrompt = null;
+  updateInstallUI();
+}
 function resetToday() {
   if (!confirm("Clear all of today's logged counts?")) return;
   delete state.log[todayKey()];
