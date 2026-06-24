@@ -213,6 +213,13 @@
   .cl-list { list-style: none; padding: 0; margin: 0; }
   .cl-list li { font-size: 13px; color: var(--muted); padding: 2px 0 2px 14px; position: relative; line-height: 1.5; }
   .cl-list li::before { content: '·'; position: absolute; left: 0; color: var(--border); }
+
+  /* Date navigator */
+  .date-nav { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .date-nav-btn { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; -webkit-tap-highlight-color: transparent; }
+  .date-nav-btn:active { color: var(--text); }
+  .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
+  .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -224,7 +231,12 @@
     <header>
       <div>
         <div class="wordmark">streak<span>.</span></div>
-        <div class="date-label" id="today-date"></div>
+        <div class="date-nav">
+          <button class="date-nav-btn" onclick="shiftDay(-1)">‹</button>
+          <div class="date-label" id="today-date"></div>
+          <button class="date-nav-btn" onclick="shiftDay(1)" id="date-next-btn">›</button>
+          <button class="viewing-past" id="back-today-btn" onclick="goToToday()" style="display:none">today</button>
+        </div>
       </div>
       <div class="score-block">
         <div class="score-ring-wrap">
@@ -235,7 +247,7 @@
           </svg>
           <div class="score-number" id="score-display">0</div>
         </div>
-        <div class="score-label">today</div>
+        <div class="score-label" id="score-day-label">today</div>
       </div>
     </header>
 
@@ -406,7 +418,19 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v24 — Current</div>
+          <div class="cl-version">v25 — Current</div>
+          <ul class="cl-list">
+            <li>Date navigator on Today tab — tap ‹ › to browse past days</li>
+            <li>Tallies are editable for any past day</li>
+            <li>Score ring and habit counts reflect the viewed date</li>
+            <li>"today" pill jumps back to current day</li>
+            <li>› button disabled when viewing today (can't go to future)</li>
+            <li>Streak always tracks real today regardless of viewed date</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v24</div>
           <ul class="cl-list">
             <li>Auto-update on load: detects new SW, silently saves data, clears cache, reloads</li>
             <li>SW polls for updates every 60s while page is open</li>
@@ -728,11 +752,28 @@ function loadState() {
 }
 
 function save() { localStorage.setItem('streak_v3', JSON.stringify(state)); }
-const todayKey = () => {
-  const d = new Date();
+
+let viewOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+const makeKey = (offset = 0) => {
+  const d = new Date(); d.setDate(d.getDate() + offset);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
-const todayLog = () => state.log[todayKey()] || {};
+const todayKey = () => makeKey(0);
+const viewKey  = () => makeKey(viewOffset);
+const todayLog = () => state.log[viewKey()] || {};
+
+function shiftDay(delta) {
+  const next = viewOffset + delta;
+  if (next > 0) return; // can't go into the future
+  viewOffset = next;
+  renderToday();
+}
+
+function goToToday() {
+  viewOffset = 0;
+  renderToday();
+}
 
 // sort: 'manual' | 'az' | 'za' | 'asc' | 'desc'
 const sortState = { positive: 'manual', negative: 'manual' };
@@ -750,12 +791,12 @@ function cycleSort(type) {
 
 // ─── Streak ───────────────────────────────────────────────────────────────────
 function updateStreak() {
-  const today = todayKey();
+  const today = makeKey(0);
   const yd = new Date(); yd.setDate(yd.getDate() - 1);
   const yesterday = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
   const positives = state.habits.filter(h => h.type === 'positive');
   if (!positives.length) return;
-  const log = todayLog();
+  const log = state.log[today] || {};
   const allDone = positives.every(h => (log[h.id] || 0) > 0);
   if (allDone) {
     if (state.lastActive === yesterday) state.streak++;
@@ -776,10 +817,17 @@ function calcScore(dateKey) {
 function render() { renderToday(); renderStats(); }
 
 function renderToday() {
-  document.getElementById('today-date').textContent =
-    new Date().toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' });
+  const isToday = viewOffset === 0;
+  const d = new Date(); d.setDate(d.getDate() + viewOffset);
+  const dateStr = isToday
+    ? `Today · ${d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' })}`
+    : d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('today-date').textContent = dateStr;
+  document.getElementById('date-next-btn').disabled = isToday;
+  document.getElementById('back-today-btn').style.display = isToday ? 'none' : '';
+  document.getElementById('score-day-label').textContent = isToday ? 'today' : 'score';
 
-  const score = calcScore(todayKey());
+  const score = calcScore(viewKey());
   document.getElementById('score-display').textContent = score > 0 ? '+'+score : score;
 
   const pct = Math.min(Math.max(score, 0), 50) / 50;
@@ -947,7 +995,7 @@ function renderPersonalBests() {
 
 
 function adjustHabit(id, delta) {
-  const key = todayKey();
+  const key = viewKey();
   if (!state.log[key]) state.log[key] = {};
   const h = state.habits.find(x => x.id === id);
   if (!h) return;
@@ -1442,9 +1490,10 @@ async function triggerInstall() {
   updateInstallUI();
 }
 function resetToday() {
-  if (!confirm("Clear all of today's logged counts?")) return;
-  delete state.log[todayKey()];
-  save(); render(); showToast('Today reset');
+  const label = viewOffset === 0 ? "today's" : "this day's";
+  if (!confirm(`Clear all of ${label} logged counts?`)) return;
+  delete state.log[viewKey()];
+  save(); render(); showToast('Day reset');
 }
 
 function clearAllData() {
