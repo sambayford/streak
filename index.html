@@ -418,7 +418,26 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v25 — Current</div>
+          <div class="cl-version">v27 — Current</div>
+          <ul class="cl-list">
+            <li>Update check runs once on load only, not repeatedly</li>
+            <li>User is asked to confirm before update proceeds</li>
+            <li>Confirmation shows the new version number</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v26</div>
+          <ul class="cl-list">
+            <li>Auto-update now driven by APP_VERSION in index.html, not sw.js</li>
+            <li>Page fetches index.html every 5 minutes and compares version strings</li>
+            <li>sw.js is now stable and never needs to change between releases</li>
+            <li>Only index.html needs uploading for future updates</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v25</div>
           <ul class="cl-list">
             <li>Date navigator on Today tab — tap ‹ › to browse past days</li>
             <li>Tallies are editable for any past day</li>
@@ -733,6 +752,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const APP_VERSION = '27';
+
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
 
@@ -1359,31 +1380,7 @@ async function registerSW() {
   try {
     swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
 
-    // ── Auto-update: detect when a new SW is waiting ──────────────────────────
-    const onNewSW = (sw) => {
-      sw.addEventListener('statechange', async e => {
-        if (e.target.state === 'activated') {
-          // New SW just activated — silently run the update process
-          autoUpdate();
-        }
-      });
-    };
-
-    if (swReg.installing) onNewSW(swReg.installing);
-    if (swReg.waiting) {
-      // A new SW is already waiting (page was open when deploy happened)
-      swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    }
-
-    swReg.addEventListener('updatefound', () => {
-      const newSW = swReg.installing;
-      if (newSW) onNewSW(newSW);
-    });
-
-    // Poll for updates every 60s while page is open
-    setInterval(() => swReg.update(), 60 * 1000);
-
-    // Wait for active SW
+    // Wait for SW to be active
     const sw = swReg.installing || swReg.waiting || swReg.active;
     if (sw && sw.state !== 'activated') {
       await new Promise(res => sw.addEventListener('statechange', e => {
@@ -1392,22 +1389,48 @@ async function registerSW() {
     }
     swReg = await navigator.serviceWorker.getRegistration('./');
     pushRemindersToSW();
+
     navigator.serviceWorker.addEventListener('message', e => {
       if (e.data?.type === 'GET_REMINDERS') pushRemindersToSW();
     });
+
     setInterval(pushHeartbeat, 60 * 1000);
+
     if ('periodicSync' in swReg) {
       try { await swReg.periodicSync.register('habit-check', { minInterval: 60 * 1000 }); } catch {}
     }
+
+    // Check for a new version by comparing APP_VERSION against what SW last saw
+    checkForUpdate();
+
   } catch (e) { console.warn('SW failed:', e); }
 }
 
+async function checkForUpdate() {
+  try {
+    const res = await fetch('./index.html', { cache: 'no-store' });
+    const html = await res.text();
+    const match = html.match(/const APP_VERSION = '(\d+)'/);
+    if (!match) return;
+    const remoteVersion = match[1];
+    if (remoteVersion !== APP_VERSION) {
+      if (confirm(`A new version of Streak is available (v${remoteVersion}). Update now?\n\nYour data will be saved automatically.`)) {
+        autoUpdate();
+      }
+    }
+  } catch {}
+  // No repeat — only runs once on load
+}
+
 async function autoUpdate() {
-  // Silent update: save data to sessionStorage, clear caches, reload
   sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
   if ('caches' in window) {
     const keys = await caches.keys();
     await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
   }
   location.reload(true);
 }

@@ -1,6 +1,8 @@
-// Streak PWA — Service Worker v3
+// Streak PWA — Service Worker
+// This file does NOT need to change between app versions.
+// Auto-update is handled by APP_VERSION in index.html.
 
-const CACHE = 'streak-v3';
+const CACHE = 'streak-cache-v1';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/streak/', '/streak/index.html'])));
@@ -12,9 +14,6 @@ self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
 self.addEventListener('fetch', e => {
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
-
-let reminders = [];
-const firedToday = {};
 
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
@@ -41,6 +40,9 @@ self.addEventListener('notificationclick', e => {
     return clients.openWindow('/streak/');
   }));
 });
+
+let reminders = [];
+const firedToday = {};
 
 async function checkDue() {
   if (!reminders.length) {
