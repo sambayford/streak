@@ -406,7 +406,16 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v23 — Current</div>
+          <div class="cl-version">v24 — Current</div>
+          <ul class="cl-list">
+            <li>Auto-update on load: detects new SW, silently saves data, clears cache, reloads</li>
+            <li>SW polls for updates every 60s while page is open</li>
+            <li>If a new SW is already waiting, triggers skip immediately</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v23</div>
           <ul class="cl-list">
             <li>Install / Reinstall button added to Settings</li>
             <li>Shows "Install" in browser, "Reinstall" when already running as PWA</li>
@@ -1301,6 +1310,32 @@ async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
     swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+
+    // ── Auto-update: detect when a new SW is waiting ──────────────────────────
+    const onNewSW = (sw) => {
+      sw.addEventListener('statechange', async e => {
+        if (e.target.state === 'activated') {
+          // New SW just activated — silently run the update process
+          autoUpdate();
+        }
+      });
+    };
+
+    if (swReg.installing) onNewSW(swReg.installing);
+    if (swReg.waiting) {
+      // A new SW is already waiting (page was open when deploy happened)
+      swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+
+    swReg.addEventListener('updatefound', () => {
+      const newSW = swReg.installing;
+      if (newSW) onNewSW(newSW);
+    });
+
+    // Poll for updates every 60s while page is open
+    setInterval(() => swReg.update(), 60 * 1000);
+
+    // Wait for active SW
     const sw = swReg.installing || swReg.waiting || swReg.active;
     if (sw && sw.state !== 'activated') {
       await new Promise(res => sw.addEventListener('statechange', e => {
@@ -1317,6 +1352,16 @@ async function registerSW() {
       try { await swReg.periodicSync.register('habit-check', { minInterval: 60 * 1000 }); } catch {}
     }
   } catch (e) { console.warn('SW failed:', e); }
+}
+
+async function autoUpdate() {
+  // Silent update: save data to sessionStorage, clear caches, reload
+  sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  location.reload(true);
 }
 
 function getActiveSW() { return swReg?.active || navigator.serviceWorker?.controller; }

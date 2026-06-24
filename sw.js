@@ -17,6 +17,7 @@ let reminders = [];
 const firedToday = {};
 
 self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
   if (e.data?.type === 'SCHEDULE') {
     reminders = e.data.reminders || [];
     checkDue();
