@@ -2,8 +2,8 @@
   "name": "Streak — Habit Tracker",
   "short_name": "Streak",
   "description": "Build good habits and track your daily streak",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/streak/",
+  "scope": "/streak/",
   "display": "standalone",
   "background_color": "#0f0f12",
   "theme_color": "#0f0f12",
@@ -19,7 +19,7 @@
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     }
   ]
 }

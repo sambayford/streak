@@ -3,7 +3,7 @@
 const CACHE = 'streak-v3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./','./index.html'])));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/streak/', '/streak/index.html'])));
   self.skipWaiting();
 });
 
@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(clients.matchAll({ type: 'window' }).then(list => {
     if (list.length) return list[0].focus();
-    return clients.openWindow('./');
+    return clients.openWindow('/streak/');
   }));
 });
 
