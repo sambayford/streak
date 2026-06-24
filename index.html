@@ -418,7 +418,19 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v27 — Current</div>
+          <div class="cl-version">v28 — Current</div>
+          <ul class="cl-list">
+            <li>Streaks are now tracked per habit, not across all habits</li>
+            <li>Good habits: streak = consecutive days with at least one log</li>
+            <li>Break habits: streak = consecutive days with nothing logged</li>
+            <li>🔥 streak shown on each habit card in the meta line</li>
+            <li>Personal bests shows streak for each habit; break habits show days clean</li>
+            <li>Overall streak row shows best streak across all positive habits</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v27</div>
           <ul class="cl-list">
             <li>Update check runs once on load only, not repeatedly</li>
             <li>User is asked to confirm before update proceeds</li>
@@ -752,7 +764,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '27';
+const APP_VERSION = '28';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -766,10 +778,9 @@ function loadState() {
     return {
       habits: s.habits || [],
       log: s.log || {},
-      streak: s.streak || 0,
-      lastActive: s.lastActive || null
+      habitStreaks: s.habitStreaks || {}, // { [id]: { streak, lastActive } }
     };
-  } catch { return { habits: [], log: {}, streak: 0, lastActive: null }; }
+  } catch { return { habits: [], log: {}, habitStreaks: {} }; }
 }
 
 function save() { localStorage.setItem('streak_v3', JSON.stringify(state)); }
@@ -811,19 +822,38 @@ function cycleSort(type) {
 }
 
 // ─── Streak ───────────────────────────────────────────────────────────────────
-function updateStreak() {
-  const today = makeKey(0);
-  const yd = new Date(); yd.setDate(yd.getDate() - 1);
-  const yesterday = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
-  const positives = state.habits.filter(h => h.type === 'positive');
-  if (!positives.length) return;
-  const log = state.log[today] || {};
-  const allDone = positives.every(h => (log[h.id] || 0) > 0);
-  if (allDone) {
-    if (state.lastActive === yesterday) state.streak++;
-    else if (state.lastActive !== today) state.streak = 1;
-    state.lastActive = today;
+function calcHabitStreak(id) {
+  // Returns current streak for a habit given its full log history
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return 0;
+  const isBreak = h.type === 'negative';
+  let streak = 0;
+  let offset = 0;
+  while (true) {
+    const key = makeKey(-offset);
+    const log = state.log[key] || {};
+    const count = log[id] || 0;
+    const active = isBreak ? count === 0 : count > 0;
+    if (!active) break;
+    streak++;
+    offset++;
+    if (offset > 365) break; // safety cap
   }
+  return streak;
+}
+
+function updateStreaks() {
+  if (!state.habitStreaks) state.habitStreaks = {};
+  for (const h of state.habits) {
+    state.habitStreaks[h.id] = calcHabitStreak(h.id);
+  }
+}
+
+// Best overall streak across all positive habits
+function bestStreak() {
+  const positives = state.habits.filter(h => h.type === 'positive');
+  if (!positives.length) return 0;
+  return Math.max(...positives.map(h => state.habitStreaks[h.id] || 0));
 }
 
 function calcScore(dateKey) {
@@ -856,10 +886,15 @@ function renderToday() {
   arc.style.strokeDashoffset = 163.36 - pct * 163.36;
   arc.style.stroke = score < 0 ? '#f87171' : score === 0 ? '#6b6b80' : '#a78bfa';
 
-  document.getElementById('streak-count').textContent = state.streak;
-  document.getElementById('streak-label').textContent =
-    state.streak === 0 ? 'Start your streak today' :
-    state.streak === 1 ? 'day streak — keep it going!' : 'day streak — incredible!';
+  updateStreaks();
+
+  document.getElementById('streak-count').textContent = bestStreak();
+  document.getElementById('streak-label').textContent = (() => {
+    const best = bestStreak();
+    if (best === 0) return 'Start your streaks today';
+    if (best === 1) return 'day streak — keep it going!';
+    return 'day streak — best habit';
+  })();
 
   renderHabitList('positive');
   renderHabitList('negative');
@@ -887,7 +922,11 @@ function renderHabitList(type) {
     const totalStr = total > 0 ? `+${total}` : `${total}`;
     const hasReminder = h.reminder?.on;
     const bellStr = hasReminder ? ' · 🔔' : '';
-    const metaStr = count === 0 ? `hold to edit${bellStr}` : `×${count} = ${totalStr} pts · hold to edit${bellStr}`;
+    const streak = state.habitStreaks?.[h.id] || 0;
+    const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
+    const metaStr = count === 0
+      ? `hold to edit${bellStr}${streakStr}`
+      : `×${count} = ${totalStr} pts · hold to edit${bellStr}${streakStr}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -928,7 +967,7 @@ function renderStats() {
   const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
 
   document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-value gold">${state.streak}</div><div class="stat-name">Day streak</div></div>
+    <div class="stat-card"><div class="stat-value gold">${bestStreak()}</div><div class="stat-name">Best streak</div></div>
     <div class="stat-card"><div class="stat-value green">+${totalPos}</div><div class="stat-name">Points gained (7d)</div></div>
     <div class="stat-card"><div class="stat-value purple">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
     <div class="stat-card"><div class="stat-value">${state.habits.length}</div><div class="stat-name">Habits tracked</div></div>
@@ -995,18 +1034,35 @@ function renderPersonalBests() {
     <div class="pb-value">${bests.overall.score > 0 ? '+' : ''}${bests.overall.score}</div>
   </div>`;
 
-  // Per-habit bests (positive habits by count, skip negatives)
+  // Per-habit bests
   const positives = state.habits.filter(h => h.type === 'positive');
+  const negatives = state.habits.filter(h => h.type === 'negative');
+
   if (positives.length) {
     for (const h of positives) {
       const pb = bests.habits[h.id];
+      const streak = state.habitStreaks?.[h.id] || 0;
       html += `<div class="pb-card">
         <div class="pb-icon">${h.icon}</div>
         <div class="pb-info">
           <div class="pb-name">${h.name}</div>
-          <div class="pb-date">${pb?.count > 0 ? formatDateKey(pb.date) : 'No logs yet'}</div>
+          <div class="pb-date">${pb?.count > 0 ? formatDateKey(pb.date) : 'No logs yet'}${streak > 0 ? ` · 🔥${streak} day streak` : ''}</div>
         </div>
         <div class="pb-value count">×${pb?.count || 0}</div>
+      </div>`;
+    }
+  }
+
+  if (negatives.length) {
+    for (const h of negatives) {
+      const streak = state.habitStreaks?.[h.id] || 0;
+      html += `<div class="pb-card">
+        <div class="pb-icon">${h.icon}</div>
+        <div class="pb-info">
+          <div class="pb-name">${h.name}</div>
+          <div class="pb-date">${streak > 0 ? `${streak} day${streak !== 1 ? 's' : ''} clean` : 'Logged today'}</div>
+        </div>
+        <div class="pb-value count">🔥${streak}</div>
       </div>`;
     }
   }
@@ -1027,7 +1083,7 @@ function adjustHabit(id, delta) {
   const pts = h.type === 'positive' ? h.pts : -h.pts;
   const change = delta * pts;
   showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} pts` : `${h.icon} removed one`);
-  updateStreak();
+  updateStreaks();
   save();
   render();
 }
@@ -1634,7 +1690,7 @@ function seedIfEmpty() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 seedIfEmpty();
 restoreAfterUpdate();
-updateStreak();
+updateStreaks();
 render();
 registerSW();
 </script>
