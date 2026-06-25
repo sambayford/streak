@@ -221,6 +221,12 @@
   .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
   .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
 
+  /* Day picker */
+  .days-picker { display: flex; gap: 6px; margin-bottom: 6px; }
+  .day-btn { flex: 1; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .day-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .days-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
   /* Level system */
   .level-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
   .level-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -435,7 +441,17 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v30 — Current</div>
+          <div class="cl-version">v31 — Current</div>
+          <ul class="cl-list">
+            <li>Habit active days selector added to habit editor</li>
+            <li>Streak only counts scheduled days — unscheduled days are skipped</li>
+            <li>Active days shown in habit card meta line when not every day</li>
+            <li>Day selector hidden for break habits (they always track daily)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v30</div>
           <ul class="cl-list">
             <li>Level up system added — XP earned from positive habit logs</li>
             <li>50 levels with exponential XP thresholds and unique titles</li>
@@ -754,6 +770,20 @@
       <div class="emoji-grid" id="emoji-grid"></div>
     </div>
 
+    <div class="field" id="days-field">
+      <label>Active days</label>
+      <div class="days-picker" id="days-picker">
+        <button type="button" class="day-btn" data-day="1">M</button>
+        <button type="button" class="day-btn" data-day="2">T</button>
+        <button type="button" class="day-btn" data-day="3">W</button>
+        <button type="button" class="day-btn" data-day="4">T</button>
+        <button type="button" class="day-btn" data-day="5">F</button>
+        <button type="button" class="day-btn" data-day="6">S</button>
+        <button type="button" class="day-btn" data-day="0">S</button>
+      </div>
+      <p class="days-hint" id="days-hint">Every day</p>
+    </div>
+
     <!-- Per-habit reminder -->
     <div class="reminder-section">
       <div class="reminder-section-head">
@@ -800,7 +830,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '30';
+const APP_VERSION = '31';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -913,21 +943,23 @@ function renderLevel() {
   state._displayedLevel = lvl;
 }
 function calcHabitStreak(id) {
-  // Returns current streak for a habit given its full log history
   const h = state.habits.find(x => x.id === id);
   if (!h) return 0;
   const isBreak = h.type === 'negative';
+  const scheduledDays = (h.days && h.days.length) ? h.days : [0,1,2,3,4,5,6];
   let streak = 0;
   let offset = 0;
-  while (true) {
-    const key = makeKey(-offset);
-    const log = state.log[key] || {};
-    const count = log[id] || 0;
+  while (offset < 366) {
+    const d = new Date(); d.setDate(d.getDate() - offset);
+    const dow = d.getDay();
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    // For positive habits, skip unscheduled days — they don't break the streak
+    if (!isBreak && !scheduledDays.includes(dow)) { offset++; continue; }
+    const count = (state.log[key] || {})[id] || 0;
     const active = isBreak ? count === 0 : count > 0;
     if (!active) break;
     streak++;
     offset++;
-    if (offset > 365) break; // safety cap
   }
   return streak;
 }
@@ -1015,9 +1047,10 @@ function renderHabitList(type) {
     const bellStr = hasReminder ? ' · 🔔' : '';
     const streak = state.habitStreaks?.[h.id] || 0;
     const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
+    const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
     const metaStr = count === 0
-      ? `hold to edit${bellStr}${streakStr}`
-      : `×${count} = ${totalStr} pts · hold to edit${bellStr}${streakStr}`;
+      ? `hold to edit${bellStr}${days}${streakStr}`
+      : `×${count} = ${totalStr} pts · hold to edit${bellStr}${days}${streakStr}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -1323,6 +1356,44 @@ function switchTab(name, btn) {
 // ─── Habit modal ──────────────────────────────────────────────────────────────
 let editingHabitId = null, selectedType = 'positive', selectedEmoji = '🏃';
 let reminderOn = false;
+let selectedDays = [0,1,2,3,4,5,6]; // all days by default
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function initDayPicker(days) {
+  selectedDays = days ? [...days] : [0,1,2,3,4,5,6];
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    const d = parseInt(btn.dataset.day);
+    btn.classList.toggle('active', selectedDays.includes(d));
+    btn.onclick = () => toggleDay(d);
+  });
+  updateDaysHint();
+}
+
+function toggleDay(d) {
+  if (selectedDays.includes(d)) {
+    if (selectedDays.length === 1) return; // must have at least one
+    selectedDays = selectedDays.filter(x => x !== d);
+  } else {
+    selectedDays = [...selectedDays, d].sort();
+  }
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.classList.toggle('active', selectedDays.includes(parseInt(btn.dataset.day)));
+  });
+  updateDaysHint();
+}
+
+function updateDaysHint() {
+  const el = document.getElementById('days-hint');
+  if (!el) return;
+  if (selectedDays.length === 7) { el.textContent = 'Every day'; return; }
+  if (selectedDays.length === 0) { el.textContent = 'No days selected'; return; }
+  // Check weekdays/weekends shortcuts
+  const wd = [1,2,3,4,5], we = [0,6];
+  if (wd.every(d => selectedDays.includes(d)) && selectedDays.length === 5) { el.textContent = 'Weekdays only'; return; }
+  if (we.every(d => selectedDays.includes(d)) && selectedDays.length === 2) { el.textContent = 'Weekends only'; return; }
+  el.textContent = selectedDays.map(d => DAY_NAMES[d]).join(', ');
+}
 
 function openAddModal(type) {
   editingHabitId = null;
@@ -1336,6 +1407,8 @@ function openAddModal(type) {
   selectedEmoji = EMOJIS[0];
   renderEmojiGrid();
   document.getElementById('emoji-custom-input').value = '';
+  initDayPicker([0,1,2,3,4,5,6]);
+  document.getElementById('days-field').style.display = (type === 'negative') ? 'none' : '';
   setReminderUI(false, { schedule: 'once', time: '08:00', from: '08:00', to: '20:00' });
   openModal('habit-modal');
 }
@@ -1353,6 +1426,8 @@ function openEditModal(id) {
     <button class="btn-danger" onclick="deleteHabit('${id}')">Delete</button>
     <button class="btn-primary" onclick="saveHabit()">Save</button>`;
   renderEmojiGrid();
+  initDayPicker(h.days || [0,1,2,3,4,5,6]);
+  document.getElementById('days-field').style.display = h.type === 'negative' ? 'none' : '';
   const r = h.reminder || {};
   setReminderUI(r.on || false, { schedule: r.schedule || 'once', time: r.time || '08:00', from: r.from || '08:00', to: r.to || '20:00' });
   openModal('habit-modal');
@@ -1399,6 +1474,8 @@ function setType(t) {
   selectedType = t;
   document.getElementById('type-pos').classList.toggle('selected', t === 'positive');
   document.getElementById('type-neg').classList.toggle('selected', t === 'negative');
+  const daysField = document.getElementById('days-field');
+  if (daysField) daysField.style.display = t === 'negative' ? 'none' : '';
 }
 
 function renderEmojiGrid() {
@@ -1440,9 +1517,9 @@ function saveHabit() {
 
   if (editingHabitId) {
     const h = state.habits.find(x => x.id === editingHabitId);
-    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.reminder = reminder; }
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.reminder = reminder; h.days = selectedType === 'positive' ? selectedDays : null; }
   } else {
-    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, reminder });
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, reminder, days: selectedType === 'positive' ? selectedDays : null });
   }
   save();
   pushRemindersToSW();
