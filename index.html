@@ -221,6 +221,11 @@
   .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
   .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
 
+  /* Chart period toggle */
+  .chart-toggle { display: flex; gap: 4px; }
+  .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
+  .chart-toggle-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
   /* Day picker */
   .days-picker { display: flex; gap: 6px; margin-bottom: 6px; }
   .day-btn { flex: 1; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -267,27 +272,6 @@
       </div>
     </header>
 
-    <div class="streak-row">
-      <div class="streak-icon">🔥</div>
-      <div class="streak-text">
-        <strong id="streak-count">0</strong>
-        <p id="streak-label">Start your streak today</p>
-      </div>
-    </div>
-
-    <div class="level-row" id="level-row">
-      <div class="level-top">
-        <div class="level-badge" id="level-badge">Lvl 1</div>
-        <div class="level-info">
-          <div class="level-title" id="level-title">Beginner</div>
-          <div class="level-xp" id="level-xp">0 / 50 XP</div>
-        </div>
-      </div>
-      <div class="level-bar-wrap">
-        <div class="level-bar" id="level-bar" style="width:0%"></div>
-      </div>
-    </div>
-
     <div id="notif-banner-wrap"></div>
 
     <div class="section-head">
@@ -319,7 +303,12 @@
     </header>
     <div class="stat-grid" id="stat-grid"></div>
     <div class="section-head">
-      <span class="section-title">📅 Last 7 days</span>
+      <span class="section-title" id="chart-title">📅 Last 7 days</span>
+      <div class="chart-toggle">
+        <button class="chart-toggle-btn active" id="ct-days" onclick="setChartPeriod('days', this)">7D</button>
+        <button class="chart-toggle-btn" id="ct-weeks" onclick="setChartPeriod('weeks', this)">7W</button>
+        <button class="chart-toggle-btn" id="ct-months" onclick="setChartPeriod('months', this)">7M</button>
+      </div>
     </div>
     <div id="bar-chart" class="bar-chart"></div>
     <div id="bar-labels" class="bar-labels"></div>
@@ -441,7 +430,40 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v31 — Current</div>
+          <div class="cl-version">v35 — Current</div>
+          <ul class="cl-list">
+            <li>Chart period toggle: switch between last 7 days, 7 weeks, 7 months</li>
+            <li>Weekly view sums scores across each 7-day block</li>
+            <li>Monthly view sums scores across all days in each calendar month</li>
+            <li>Current period always highlighted purple on the right</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v34</div>
+          <ul class="cl-list">
+            <li>Removed duplicate best day card from personal bests list (already shown in stat grid)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v33</div>
+          <ul class="cl-list">
+            <li>Replaced 7-day points stat with total accumulated XP</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v32</div>
+          <ul class="cl-list">
+            <li>Removed best streak and level bar from Today tab</li>
+            <li>Level tile on Progress tab now shows XP remaining to next level</li>
+            <li>Fixed duplicate notification banner element</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v31</div>
           <ul class="cl-list">
             <li>Habit active days selector added to habit editor</li>
             <li>Streak only counts scheduled days — unscheduled days are skipped</li>
@@ -830,7 +852,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '31';
+const APP_VERSION = '35';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -875,6 +897,17 @@ function goToToday() {
 
 // sort: 'manual' | 'az' | 'za' | 'asc' | 'desc'
 const sortState = { positive: 'manual', negative: 'manual' };
+
+let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
+
+function setChartPeriod(period, btn) {
+  chartPeriod = period;
+  document.querySelectorAll('.chart-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = { days: '📅 Last 7 days', weeks: '📅 Last 7 weeks', months: '📅 Last 7 months' };
+  document.getElementById('chart-title').textContent = titles[period];
+  renderChart();
+}
 
 function cycleSort(type) {
   const order = ['manual', 'az', 'za', 'asc', 'desc'];
@@ -1010,17 +1043,8 @@ function renderToday() {
 
   updateStreaks();
 
-  document.getElementById('streak-count').textContent = bestStreak();
-  document.getElementById('streak-label').textContent = (() => {
-    const best = bestStreak();
-    if (best === 0) return 'Start your streaks today';
-    if (best === 1) return 'day streak — keep it going!';
-    return 'day streak — best habit';
-  })();
-
   renderHabitList('positive');
   renderHabitList('negative');
-  renderLevel();
   renderNotifBanner();
 }
 
@@ -1076,48 +1100,86 @@ function renderHabitList(type) {
 }
 
 function renderStats() {
-  const days = [];
-  let totalPos = 0;
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const s = calcScore(key);
-    const label = i === 0 ? 'Today' : d.toLocaleDateString('en-AU',{weekday:'short'});
-    days.push({ label, score: s, isToday: i === 0 });
-    if (s > 0) totalPos += s;
-  }
+  const xp = calcTotalXP();
+  const lvl = calcLevel(xp);
+  const nextLvlXP = xpForLevel(lvl + 1);
+  const xpRemaining = lvl >= 50 ? 0 : nextLvlXP - xp;
 
   // All-time best score
   const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
 
-  const xp = calcTotalXP();
-  const lvl = calcLevel(xp);
-
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-value gold">${bestStreak()}</div><div class="stat-name">Best streak</div></div>
-    <div class="stat-card"><div class="stat-value green">+${totalPos}</div><div class="stat-name">Points gained (7d)</div></div>
+    <div class="stat-card"><div class="stat-value green">${xp}</div><div class="stat-name">Total XP earned</div></div>
     <div class="stat-card"><div class="stat-value purple">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--accent)">Lvl ${lvl}</div><div class="stat-name">${xp} XP total</div></div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--accent)">Lvl ${lvl}</div>
+      <div class="stat-name">${lvl >= 50 ? 'Max level' : xpRemaining + ' XP to next'}</div>
+    </div>
   `;
 
-  const maxScore = Math.max(...days.map(d => Math.abs(d.score)), 1);
-  const chartH = 148;
+  renderChart();
+  renderPersonalBests();
+}
 
-  document.getElementById('bar-chart').innerHTML = days.map(d => {
-    const col = d.score < 0 ? '#f87171' : d.score === 0 ? '#2e2e38' : d.isToday ? '#a78bfa' : '#6b6b80';
-    const h = Math.max(3, Math.round((Math.abs(d.score) / maxScore) * chartH));
-    const valStr = d.score === 0 ? '' : (d.score > 0 ? '+' : '') + d.score;
+function renderChart() {
+  const chartH = 148;
+  let bars = [];
+
+  if (chartPeriod === 'days') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const score = calcScore(key);
+      const label = i === 0 ? 'today' : d.toLocaleDateString('en-AU', { weekday: 'short' });
+      bars.push({ label, score, isNow: i === 0 });
+    }
+  } else if (chartPeriod === 'weeks') {
+    for (let i = 6; i >= 0; i--) {
+      // Week ending (7*i) days ago
+      let weekScore = 0;
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(); day.setDate(day.getDate() - (i * 7 + d));
+        const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+        weekScore += calcScore(key);
+      }
+      const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() - i * 7);
+      const label = i === 0 ? 'now' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+      bars.push({ label, score: weekScore, isNow: i === 0 });
+    }
+  } else if (chartPeriod === 'months') {
+    for (let i = 6; i >= 0; i--) {
+      const ref = new Date();
+      ref.setDate(1);
+      ref.setMonth(ref.getMonth() - i);
+      const year = ref.getFullYear();
+      const month = ref.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      let monthScore = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        monthScore += calcScore(key);
+      }
+      const label = i === 0 ? 'now' : ref.toLocaleDateString('en-AU', { month: 'short' });
+      bars.push({ label, score: monthScore, isNow: i === 0 });
+    }
+  }
+
+  const maxScore = Math.max(...bars.map(b => Math.abs(b.score)), 1);
+
+  document.getElementById('bar-chart').innerHTML = bars.map(b => {
+    const col = b.score < 0 ? '#f87171' : b.score === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
+    const h = Math.max(3, Math.round((Math.abs(b.score) / maxScore) * chartH));
+    const valStr = b.score === 0 ? '' : (b.score > 0 ? '+' : '') + b.score;
     return `<div class="bar-col">
       <div class="bar-val">${valStr}</div>
       <div class="bar-wrap"><div class="bar" style="height:${h}px;background:${col}"></div></div>
     </div>`;
   }).join('');
 
-  document.getElementById('bar-labels').innerHTML = days.map(d =>
-    `<div class="bar-label-cell ${d.isToday ? 'today' : ''}">${d.isToday ? 'today' : d.label}</div>`
+  document.getElementById('bar-labels').innerHTML = bars.map(b =>
+    `<div class="bar-label-cell ${b.isNow ? 'today' : ''}">${b.label}</div>`
   ).join('');
-
-  renderPersonalBests();
 }
 
 function calcPersonalBests() {
@@ -1150,16 +1212,6 @@ function renderPersonalBests() {
   if (!el) return;
 
   let html = '';
-
-  // Overall best day
-  html += `<div class="pb-card pb-overall">
-    <div class="pb-icon">🏆</div>
-    <div class="pb-info">
-      <div class="pb-name">Best day score</div>
-      <div class="pb-date">${formatDateKey(bests.overall.date)}</div>
-    </div>
-    <div class="pb-value">${bests.overall.score > 0 ? '+' : ''}${bests.overall.score}</div>
-  </div>`;
 
   // Per-habit bests
   const positives = state.habits.filter(h => h.type === 'positive');
