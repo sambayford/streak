@@ -311,7 +311,7 @@
     </header>
 
     <div class="settings-group">
-      <div class="settings-group-title">Day</div>
+      <div class="settings-group-title">Data</div>
       <div class="settings-row">
         <div class="settings-item">
           <div class="settings-item-icon">↺</div>
@@ -323,36 +323,6 @@
             <button class="settings-btn" onclick="resetToday()">Reset</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-group-title">Notifications</div>
-      <div class="settings-row">
-        <div class="settings-item">
-          <div class="settings-item-icon">🔔</div>
-          <div class="settings-item-info">
-            <div class="settings-item-label">Permission</div>
-            <div class="settings-item-desc" id="notif-status-desc">Checking…</div>
-          </div>
-          <div class="settings-item-action" id="notif-status-action"></div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-icon">🧪</div>
-          <div class="settings-item-info">
-            <div class="settings-item-label">Send test notification</div>
-            <div class="settings-item-desc">Confirm notifications are working</div>
-          </div>
-          <div class="settings-item-action">
-            <button class="settings-btn" onclick="testNotification()">Test</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-group-title">Data</div>
-      <div class="settings-row">
         <div class="settings-item">
           <div class="settings-item-icon">📤</div>
           <div class="settings-item-info">
@@ -382,6 +352,30 @@
           </div>
           <div class="settings-item-action">
             <button class="settings-btn danger" onclick="clearAllData()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Notifications</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">🔔</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Permission</div>
+            <div class="settings-item-desc" id="notif-status-desc">Checking…</div>
+          </div>
+          <div class="settings-item-action" id="notif-status-action"></div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">🧪</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Send test notification</div>
+            <div class="settings-item-desc">Confirm notifications are working</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="testNotification()">Test</button>
           </div>
         </div>
       </div>
@@ -418,7 +412,15 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v28 — Current</div>
+          <div class="cl-version">v29 — Current</div>
+          <ul class="cl-list">
+            <li>Reset today moved from its own section into the Data section</li>
+            <li>Day section removed from Settings</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v28</div>
           <ul class="cl-list">
             <li>Streaks are now tracked per habit, not across all habits</li>
             <li>Good habits: streak = consecutive days with at least one log</li>
@@ -764,7 +766,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '28';
+const APP_VERSION = '29';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
