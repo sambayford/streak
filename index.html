@@ -220,6 +220,16 @@
   .date-nav-btn:active { color: var(--text); }
   .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
   .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
+
+  /* Level system */
+  .level-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .level-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .level-badge { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 700; background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.4); color: var(--accent); border-radius: 8px; padding: 4px 10px; flex-shrink: 0; white-space: nowrap; }
+  .level-info { flex: 1; min-width: 0; }
+  .level-title { font-weight: 600; font-size: 14px; }
+  .level-xp { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .level-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .level-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #c4b5fd); transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1); }
 </style>
 </head>
 <body>
@@ -256,6 +266,19 @@
       <div class="streak-text">
         <strong id="streak-count">0</strong>
         <p id="streak-label">Start your streak today</p>
+      </div>
+    </div>
+
+    <div class="level-row" id="level-row">
+      <div class="level-top">
+        <div class="level-badge" id="level-badge">Lvl 1</div>
+        <div class="level-info">
+          <div class="level-title" id="level-title">Beginner</div>
+          <div class="level-xp" id="level-xp">0 / 50 XP</div>
+        </div>
+      </div>
+      <div class="level-bar-wrap">
+        <div class="level-bar" id="level-bar" style="width:0%"></div>
       </div>
     </div>
 
@@ -412,7 +435,18 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v29 — Current</div>
+          <div class="cl-version">v30 — Current</div>
+          <ul class="cl-list">
+            <li>Level up system added — XP earned from positive habit logs</li>
+            <li>50 levels with exponential XP thresholds and unique titles</li>
+            <li>Level progress bar shown on Today tab below streak</li>
+            <li>Toast notification on level up</li>
+            <li>Level and total XP shown on Progress tab stats</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v29</div>
           <ul class="cl-list">
             <li>Reset today moved from its own section into the Data section</li>
             <li>Day section removed from Settings</li>
@@ -766,7 +800,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '29';
+const APP_VERSION = '30';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -823,7 +857,61 @@ function cycleSort(type) {
   renderHabitList(type);
 }
 
-// ─── Streak ───────────────────────────────────────────────────────────────────
+// ─── Level system ─────────────────────────────────────────────────────────────
+const LEVEL_TITLES = [
+  'Beginner', 'Motivated', 'Consistent', 'Determined', 'Focused',
+  'Disciplined', 'Committed', 'Resilient', 'Dedicated', 'Persistent',
+  'Unstoppable', 'Driven', 'Purposeful', 'Steadfast', 'Tenacious',
+  'Champion', 'Elite', 'Master', 'Legend', 'Mythic'
+];
+
+// XP thresholds per level (cumulative XP needed to reach each level)
+function xpForLevel(lvl) {
+  // Level 1 = 0 XP, grows exponentially
+  if (lvl <= 1) return 0;
+  return Math.round(50 * Math.pow(lvl - 1, 1.6));
+}
+
+function calcTotalXP() {
+  // XP = sum of all positive habit points earned across all days
+  let xp = 0;
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    for (const h of state.habits) {
+      if (h.type !== 'positive') continue;
+      xp += (log[h.id] || 0) * h.pts;
+    }
+  }
+  return xp;
+}
+
+function calcLevel(xp) {
+  let lvl = 1;
+  while (xpForLevel(lvl + 1) <= xp) lvl++;
+  return Math.min(lvl, 50);
+}
+
+function renderLevel() {
+  const xp = calcTotalXP();
+  const lvl = calcLevel(xp);
+  const thisLvlXP = xpForLevel(lvl);
+  const nextLvlXP = xpForLevel(lvl + 1);
+  const pct = lvl >= 50 ? 100 : Math.round(((xp - thisLvlXP) / (nextLvlXP - thisLvlXP)) * 100);
+  const title = LEVEL_TITLES[Math.min(lvl - 1, LEVEL_TITLES.length - 1)];
+
+  document.getElementById('level-badge').textContent = `Lvl ${lvl}`;
+  document.getElementById('level-title').textContent = title;
+  document.getElementById('level-xp').textContent = lvl >= 50
+    ? `${xp} XP — Max level!`
+    : `${xp - thisLvlXP} / ${nextLvlXP - thisLvlXP} XP to next level`;
+  document.getElementById('level-bar').style.width = pct + '%';
+
+  // Level up toast detection
+  const prevLvl = state._displayedLevel || 0;
+  if (prevLvl && lvl > prevLvl) {
+    showToast(`⬆️ Level up! You're now level ${lvl} — ${title}`);
+  }
+  state._displayedLevel = lvl;
+}
 function calcHabitStreak(id) {
   // Returns current streak for a habit given its full log history
   const h = state.habits.find(x => x.id === id);
@@ -900,6 +988,7 @@ function renderToday() {
 
   renderHabitList('positive');
   renderHabitList('negative');
+  renderLevel();
   renderNotifBanner();
 }
 
@@ -968,11 +1057,14 @@ function renderStats() {
   // All-time best score
   const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
 
+  const xp = calcTotalXP();
+  const lvl = calcLevel(xp);
+
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-value gold">${bestStreak()}</div><div class="stat-name">Best streak</div></div>
     <div class="stat-card"><div class="stat-value green">+${totalPos}</div><div class="stat-name">Points gained (7d)</div></div>
     <div class="stat-card"><div class="stat-value purple">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
-    <div class="stat-card"><div class="stat-value">${state.habits.length}</div><div class="stat-name">Habits tracked</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent)">Lvl ${lvl}</div><div class="stat-name">${xp} XP total</div></div>
   `;
 
   const maxScore = Math.max(...days.map(d => Math.abs(d.score)), 1);
