@@ -221,6 +221,14 @@
   .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
   .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
 
+  /* Setup guide */
+  .setup-guide { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .setup-step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .setup-step:last-child { border-bottom: none; }
+  .setup-num { width: 24px; height: 24px; background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.4); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+  .setup-title { font-weight: 500; font-size: 14px; margin-bottom: 3px; }
+  .setup-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
   /* Chart period toggle */
   .chart-toggle { display: flex; gap: 4px; }
   .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
@@ -426,11 +434,67 @@
     </div>
 
     <div class="settings-group">
+      <div class="settings-group-title">Setup guide</div>
+      <div class="setup-guide">
+        <div class="setup-step">
+          <div class="setup-num">1</div>
+          <div class="setup-text">
+            <div class="setup-title">Add your habits</div>
+            <div class="setup-desc">On the Today tab, tap ＋ to add a good habit or a habit to break. Give it a name, points value, and icon.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">2</div>
+          <div class="setup-text">
+            <div class="setup-title">Set active days</div>
+            <div class="setup-desc">In the habit editor, choose which days of the week the habit applies to. Unscheduled days won't break your streak.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">3</div>
+          <div class="setup-text">
+            <div class="setup-title">Log each day</div>
+            <div class="setup-desc">Tap + to log a habit. Tap − to undo. Good habits add points; break habits subtract when logged.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">4</div>
+          <div class="setup-text">
+            <div class="setup-title">Add reminders</div>
+            <div class="setup-desc">Hold a habit card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">5</div>
+          <div class="setup-text">
+            <div class="setup-title">Install as an app</div>
+            <div class="setup-desc">In your browser menu, tap "Add to home screen" to install Streak as a PWA. The Install button above will appear if your browser supports it.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">6</div>
+          <div class="setup-text">
+            <div class="setup-title">Back up your data</div>
+            <div class="setup-desc">Use Export in the Data section to save a JSON backup. Import it on a new device or after clearing the app.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
       <div class="settings-group-title">What's new</div>
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v35 — Current</div>
+          <div class="cl-version">v36 — Current</div>
+          <ul class="cl-list">
+            <li>Removed "hold to edit" text from all habit cards</li>
+            <li>Setup guide added to Settings with 6 steps covering all key features</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v35</div>
           <ul class="cl-list">
             <li>Chart period toggle: switch between last 7 days, 7 weeks, 7 months</li>
             <li>Weekly view sums scores across each 7-day block</li>
@@ -852,7 +916,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '35';
+const APP_VERSION = '36';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1073,8 +1137,8 @@ function renderHabitList(type) {
     const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
     const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
     const metaStr = count === 0
-      ? `hold to edit${bellStr}${days}${streakStr}`
-      : `×${count} = ${totalStr} pts · hold to edit${bellStr}${days}${streakStr}`;
+      ? `${bellStr}${days}${streakStr}`.replace(/^ · /, '') || '—'
+      : `×${count} = ${totalStr} pts${bellStr}${days}${streakStr}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
