@@ -215,13 +215,31 @@
   .cl-list li { font-size: 13px; color: var(--muted); padding: 2px 0 2px 14px; position: relative; line-height: 1.5; }
   .cl-list li::before { content: '·'; position: absolute; left: 0; color: var(--border); }
 
-  /* Date navigator */
-  .date-nav { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-  .date-nav-btn { background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; padding: 0 6px; line-height: 1; -webkit-tap-highlight-color: transparent; }
-  .date-nav-btn:active { color: var(--text); }
-  .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
-  .date-nav .date-label { font-size: 13px; letter-spacing: 0.06em; margin-top: 0; }
-  .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
+  /* Date navigator row */
+  .date-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .today-date-big { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 300; color: var(--muted); line-height: 1.1; }
+  .date-nav-btns { display: flex; gap: 8px; align-items: center; }
+  .date-circle-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface2); border: none;
+    color: var(--text); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+  }
+  .date-circle-btn:active { background: var(--border); }
+  .date-circle-btn:disabled { opacity: 0.25; pointer-events: none; }
+  .score-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface2);
+    position: relative; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .score-circle svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-circle-num {
+    position: relative; z-index: 1;
+    font-family: 'Fraunces', serif; font-size: 12px; font-weight: 700;
+    color: var(--text); line-height: 1;
+  }
 
   /* Level up modal */
   .levelup-overlay { align-items: center !important; justify-content: center !important; }
@@ -325,25 +343,26 @@
     <header>
       <div>
         <div class="wordmark">streak<span>.</span></div>
-        <div class="date-nav">
-          <button class="date-nav-btn" onclick="shiftDay(-1)">‹</button>
-          <div class="date-label" id="today-date"></div>
-          <button class="date-nav-btn" onclick="shiftDay(1)" id="date-next-btn">›</button>
-          <button class="viewing-past" id="back-today-btn" onclick="goToToday()" style="display:none">today</button>
-        </div>
       </div>
-      <div class="score-block">
-        <div class="score-ring-wrap">
-          <svg width="64" height="64" viewBox="0 0 64 64">
+    </header>
+
+    <!-- Date navigator row -->
+    <div class="date-nav-row">
+      <div class="today-date-big" id="today-date">Today</div>
+      <div class="date-nav-btns">
+        <button class="date-circle-btn" onclick="shiftDay(-1)">‹</button>
+        <button class="date-circle-btn" onclick="shiftDay(1)" id="date-next-btn">›</button>
+        <button class="date-circle-btn" id="back-today-btn" onclick="goToToday()" title="Go to today">»</button>
+        <div class="score-circle">
+          <svg width="40" height="40" viewBox="0 0 64 64">
             <circle cx="32" cy="32" r="26" stroke="#2e2e38" stroke-width="5" fill="none"/>
             <circle id="score-arc" cx="32" cy="32" r="26" stroke="#a78bfa" stroke-width="5" fill="none"
               stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"/>
           </svg>
-          <div class="score-number" id="score-display">0</div>
+          <div class="score-circle-num" id="score-display">0</div>
         </div>
-        <div class="score-label" id="score-day-label">today</div>
       </div>
-    </header>
+    </div>
 
     <div id="notif-banner-wrap"></div>
 
@@ -551,7 +570,72 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v43 — Current</div>
+          <div class="cl-version">v51 — Current</div>
+          <ul class="cl-list">
+            <li>Score ring now scales to your all-time best day — full circle when you match or beat your PB</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v50</div>
+          <ul class="cl-list">
+            <li>Fixed JS error caused by stale reference to removed score-day-label element — habits were not rendering on Today tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v49</div>
+          <ul class="cl-list">
+            <li>Score ring moved to date nav row, right of the » button</li>
+            <li>Score circle sized to match the ‹ › » navigation circles</li>
+            <li>Score removed from header top-right</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v48</div>
+          <ul class="cl-list">
+            <li>Replaced 📅 calendar emoji with » double arrow for back-to-today button</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v47</div>
+          <ul class="cl-list">
+            <li>Removed "score" / "today" label from below the score ring</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v46</div>
+          <ul class="cl-list">
+            <li>Removed date from under streak. branding</li>
+            <li>Date selector text reduced and lightened — smaller than the wordmark</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v45</div>
+          <ul class="cl-list">
+            <li>Restored streak. branding top-left and score ring top-right</li>
+            <li>Date navigator moved to its own row below the header</li>
+            <li>Shows "Today" or short past date in large Fraunces text</li>
+            <li>📅 button always visible, dims when on today</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v44</div>
+          <ul class="cl-list">
+            <li>Today tab header redesigned — large date text on left, circular nav buttons on right</li>
+            <li>Shows "Today" when on current day, short date when browsing past</li>
+            <li>📅 calendar button replaces "today" pill — always visible, dims when on today</li>
+            <li>Score ring moved below header as a compact row</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v43</div>
           <ul class="cl-list">
             <li>Date navigator arrows and date text made larger on Today tab</li>
           </ul>
@@ -1059,10 +1143,12 @@
   </div>
 </div>
 
+<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:400;display:none"></canvas>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '43';
+const APP_VERSION = '51';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1247,26 +1333,43 @@ function render() { renderToday(); renderStats(); }
 function renderToday() {
   const isToday = viewOffset === 0;
   const d = new Date(); d.setDate(d.getDate() + viewOffset);
-  const dateStr = isToday
-    ? `Today · ${d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' })}`
-    : d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  document.getElementById('today-date').textContent = dateStr;
+
+  // Big date text in the nav row
+  const dateEl = document.getElementById('today-date');
+  dateEl.textContent = isToday
+    ? 'Today'
+    : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'long' });
+
+  // Subdate removed — no longer shown under wordmark
+
   document.getElementById('date-next-btn').disabled = isToday;
-  document.getElementById('back-today-btn').style.display = isToday ? 'none' : '';
-  document.getElementById('score-day-label').textContent = isToday ? 'today' : 'score';
+  const backBtn = document.getElementById('back-today-btn');
+  backBtn.style.opacity = isToday ? '0.3' : '1';
+  backBtn.style.pointerEvents = isToday ? 'none' : '';
+
+  // score-day-label removed in v49
 
   const score = calcScore(viewKey());
   document.getElementById('score-display').textContent = score > 0 ? '+'+score : score;
 
-  const pct = Math.min(Math.max(score, 0), 50) / 50;
+  const allTimeBest = Math.max(1, ...Object.keys(state.log).map(k => calcScore(k)));
+  const pct = score <= 0 ? 0 : Math.min(score / allTimeBest, 1);
   const arc = document.getElementById('score-arc');
   arc.style.strokeDashoffset = 163.36 - pct * 163.36;
-  arc.style.stroke = score < 0 ? '#f87171' : score === 0 ? '#6b6b80' : '#a78bfa';
+  arc.style.stroke = score < 0 ? '#f87171' : score === 0 ? '#6b6b80' : score >= allTimeBest ? '#fbbf24' : '#a78bfa';
+
+  // Celebrate when daily PB is reached (and it's today, not a past day edit)
+  const prevDisplayedScore = state._displayedScore || 0;
+  if (viewOffset === 0 && score >= allTimeBest && score > prevDisplayedScore && score > 0) {
+    triggerConfetti();
+    showToast('🏆 New daily PB!');
+  }
+  state._displayedScore = viewOffset === 0 ? score : prevDisplayedScore;
 
   updateStreaks();
-
   renderHabitList('positive');
   renderHabitList('negative');
+  renderLevel();
   renderNotifBanner();
 }
 
@@ -2051,7 +2154,66 @@ async function requestNotifPermission() {
   if (perm === 'granted') { showToast('🔔 Notifications enabled'); pushRemindersToSW(); }
 }
 
-// ─── Install prompt ───────────────────────────────────────────────────────────
+// ─── Confetti ─────────────────────────────────────────────────────────────────
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  const colours = ['#a78bfa','#fbbf24','#4ade80','#f87171','#60a5fa','#f472b6','#34d399'];
+  const pieces = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 40,
+    w: 6 + Math.random() * 8,
+    h: 3 + Math.random() * 4,
+    col: colours[Math.floor(Math.random() * colours.length)],
+    rot: Math.random() * Math.PI * 2,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 4,
+    vr: (Math.random() - 0.5) * 0.2,
+    alpha: 1
+  }));
+
+  let frame;
+  let start = null;
+  const duration = 2800;
+
+  function draw(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let alive = false;
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.08; // gravity
+      p.rot += p.vr;
+      if (elapsed > duration * 0.6) p.alpha = Math.max(0, p.alpha - 0.018);
+      if (p.y < canvas.height + 20) alive = true;
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+
+    if (alive && elapsed < duration + 1000) {
+      frame = requestAnimationFrame(draw);
+    } else {
+      canvas.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  if (frame) cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(draw);
+}
 let deferredInstallPrompt = null;
 const isPWA = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
