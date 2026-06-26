@@ -217,9 +217,10 @@
 
   /* Date navigator */
   .date-nav { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-  .date-nav-btn { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; -webkit-tap-highlight-color: transparent; }
+  .date-nav-btn { background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; padding: 0 6px; line-height: 1; -webkit-tap-highlight-color: transparent; }
   .date-nav-btn:active { color: var(--text); }
   .date-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
+  .date-nav .date-label { font-size: 13px; letter-spacing: 0.06em; margin-top: 0; }
   .viewing-past { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; margin-left: 4px; }
 
   /* Level up modal */
@@ -550,7 +551,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v42 — Current</div>
+          <div class="cl-version">v43 — Current</div>
+          <ul class="cl-list">
+            <li>Date navigator arrows and date text made larger on Today tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v42</div>
           <ul class="cl-list">
             <li>Weight PB merged into habit's PB card rather than a separate card</li>
             <li>Shows 🏋️ Best weight · 80kg · date as a second line on the card</li>
@@ -1054,7 +1062,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '42';
+const APP_VERSION = '43';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
