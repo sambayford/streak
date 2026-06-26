@@ -204,6 +204,7 @@
   .pb-value { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
   .pb-value.count { color: var(--positive); }
   .pb-overall { background: var(--accent-dim); border-color: rgba(167,139,250,0.3); }
+  .pb-weight { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); margin-top: 5px; }
 
   /* Changelog */
   .changelog { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
@@ -549,7 +550,34 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v39 — Current</div>
+          <div class="cl-version">v42 — Current</div>
+          <ul class="cl-list">
+            <li>Weight PB merged into habit's PB card rather than a separate card</li>
+            <li>Shows 🏋️ Best weight · 80kg · date as a second line on the card</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v41</div>
+          <ul class="cl-list">
+            <li>Personal best weight shown on Progress tab for weight-tracked habits</li>
+            <li>Displays highest single weight recorded and the date it was set</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v40</div>
+          <ul class="cl-list">
+            <li>Weight tracking option added to habit editor (good habits only)</li>
+            <li>When enabled, tapping + prompts for the weight used (kg)</li>
+            <li>Pre-fills last recorded weight for that habit</li>
+            <li>Today's weights shown in the habit card meta line</li>
+            <li>Weights stored per day alongside tally counts</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v39</div>
           <ul class="cl-list">
             <li>Fixed update loop bug where cached v36 triggered false update prompts</li>
             <li>Update check now adds a cache-busting timestamp to the fetch URL</li>
@@ -960,6 +988,14 @@
       <p class="days-hint" id="days-hint">Every day</p>
     </div>
 
+    <div class="reminder-section" id="weight-section">
+      <div class="reminder-section-head">
+        <span class="reminder-section-title">🏋️ Track weight</span>
+        <button class="reminder-toggle" id="weight-toggle-btn" onclick="toggleWeightTracking()"></button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;display:none" id="weight-hint">Each time you tap + you'll be prompted to enter the weight used.</p>
+    </div>
+
     <!-- Per-habit reminder -->
     <div class="reminder-section">
       <div class="reminder-section-head">
@@ -1018,7 +1054,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '39';
+const APP_VERSION = '42';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1250,9 +1286,11 @@ function renderHabitList(type) {
     const streak = state.habitStreaks?.[h.id] || 0;
     const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
     const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
+    const weights = h.trackWeight && log[h.id + '_weights']?.length
+      ? ` · ${log[h.id + '_weights'].join(', ')}kg` : '';
     const metaStr = count === 0
       ? `${bellStr}${days}${streakStr}`.replace(/^ · /, '') || '—'
-      : `×${count} = ${totalStr} pts${bellStr}${days}${streakStr}`;
+      : `×${count} = ${totalStr} pts${bellStr}${days}${streakStr}${weights}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -1384,6 +1422,18 @@ function formatDateKey(key) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function calcBestWeight(id) {
+  // Returns { weight, date } for the highest single weight entry across all logs
+  let best = { weight: 0, date: null };
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    const weights = log[id + '_weights'] || [];
+    for (const w of weights) {
+      if (w > best.weight) best = { weight: w, date: dateKey };
+    }
+  }
+  return best;
+}
+
 function renderPersonalBests() {
   const bests = calcPersonalBests();
   const el = document.getElementById('pb-list');
@@ -1391,7 +1441,6 @@ function renderPersonalBests() {
 
   let html = '';
 
-  // Per-habit bests
   const positives = state.habits.filter(h => h.type === 'positive');
   const negatives = state.habits.filter(h => h.type === 'negative');
 
@@ -1399,11 +1448,16 @@ function renderPersonalBests() {
     for (const h of positives) {
       const pb = bests.habits[h.id];
       const streak = state.habitStreaks?.[h.id] || 0;
+      const wPB = h.trackWeight ? calcBestWeight(h.id) : null;
+      const weightLine = wPB?.weight > 0
+        ? `<div class="pb-weight">🏋️ Best weight · ${wPB.weight}kg · ${formatDateKey(wPB.date)}</div>`
+        : (h.trackWeight ? `<div class="pb-weight">🏋️ No weights logged yet</div>` : '');
       html += `<div class="pb-card">
         <div class="pb-icon">${h.icon}</div>
         <div class="pb-info">
           <div class="pb-name">${h.name}</div>
           <div class="pb-date">${pb?.count > 0 ? formatDateKey(pb.date) : 'No logs yet'}${streak > 0 ? ` · 🔥${streak} day streak` : ''}</div>
+          ${weightLine}
         </div>
         <div class="pb-value count">×${pb?.count || 0}</div>
       </div>`;
@@ -1436,10 +1490,55 @@ function adjustHabit(id, delta) {
   const prev = state.log[key][id] || 0;
   const next = Math.max(0, prev + delta);
   if (next === prev) return;
+
+  // Weight prompt for positive delta on weight-tracked habits
+  if (h.trackWeight && delta > 0) {
+    promptWeight(h, key, delta);
+    return;
+  }
+
+  commitAdjust(id, key, delta, h, null);
+}
+
+function promptWeight(h, key, delta) {
+  // Show weight input modal
+  const lastWeight = getLastWeight(h.id);
+  const input = prompt(`${h.icon} ${h.name}\nEnter weight used (kg):`, lastWeight || '');
+  if (input === null) return; // cancelled
+  const weight = parseFloat(input);
+  const weightVal = isNaN(weight) ? null : weight;
+  commitAdjust(h.id, key, delta, h, weightVal);
+}
+
+function getLastWeight(id) {
+  // Find the most recent weight entry for this habit
+  const keys = Object.keys(state.log).sort().reverse();
+  for (const k of keys) {
+    const entry = state.log[k];
+    if (entry[id + '_weights'] && entry[id + '_weights'].length) {
+      return entry[id + '_weights'].slice(-1)[0];
+    }
+  }
+  return '';
+}
+
+function commitAdjust(id, key, delta, h, weight) {
+  if (!state.log[key]) state.log[key] = {};
+  const prev = state.log[key][id] || 0;
+  const next = Math.max(0, prev + delta);
+  if (next === prev) return;
   state.log[key][id] = next;
+
+  // Store weight if provided
+  if (weight !== null && delta > 0) {
+    if (!state.log[key][id + '_weights']) state.log[key][id + '_weights'] = [];
+    state.log[key][id + '_weights'].push(weight);
+  }
+
   const pts = h.type === 'positive' ? h.pts : -h.pts;
   const change = delta * pts;
-  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} pts` : `${h.icon} removed one`);
+  const weightStr = weight !== null ? ` · ${weight}kg` : '';
+  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} pts${weightStr}` : `${h.icon} removed one`);
   updateStreaks();
   save();
   render();
@@ -1586,9 +1685,20 @@ function switchTab(name, btn) {
 // ─── Habit modal ──────────────────────────────────────────────────────────────
 let editingHabitId = null, selectedType = 'positive', selectedEmoji = '🏃';
 let reminderOn = false;
-let selectedDays = [0,1,2,3,4,5,6]; // all days by default
+let selectedDays = [0,1,2,3,4,5,6];
+let trackWeight = false; // all days by default
 
-const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function toggleWeightTracking() {
+  trackWeight = !trackWeight;
+  document.getElementById('weight-toggle-btn').classList.toggle('on', trackWeight);
+  document.getElementById('weight-hint').style.display = trackWeight ? '' : 'none';
+}
+
+function initWeightToggle(val) {
+  trackWeight = !!val;
+  document.getElementById('weight-toggle-btn').classList.toggle('on', trackWeight);
+  document.getElementById('weight-hint').style.display = trackWeight ? '' : 'none';
+}
 
 function initDayPicker(days) {
   selectedDays = days ? [...days] : [0,1,2,3,4,5,6];
@@ -1639,6 +1749,8 @@ function openAddModal(type) {
   document.getElementById('emoji-custom-input').value = '';
   initDayPicker([0,1,2,3,4,5,6]);
   document.getElementById('days-field').style.display = (type === 'negative') ? 'none' : '';
+  initWeightToggle(false);
+  document.getElementById('weight-section').style.display = (type === 'negative') ? 'none' : '';
   setReminderUI(false, { schedule: 'once', time: '08:00', from: '08:00', to: '20:00' });
   openModal('habit-modal');
 }
@@ -1658,6 +1770,8 @@ function openEditModal(id) {
   renderEmojiGrid();
   initDayPicker(h.days || [0,1,2,3,4,5,6]);
   document.getElementById('days-field').style.display = h.type === 'negative' ? 'none' : '';
+  initWeightToggle(h.trackWeight || false);
+  document.getElementById('weight-section').style.display = h.type === 'negative' ? 'none' : '';
   const r = h.reminder || {};
   setReminderUI(r.on || false, { schedule: r.schedule || 'once', time: r.time || '08:00', from: r.from || '08:00', to: r.to || '20:00' });
   openModal('habit-modal');
@@ -1706,6 +1820,8 @@ function setType(t) {
   document.getElementById('type-neg').classList.toggle('selected', t === 'negative');
   const daysField = document.getElementById('days-field');
   if (daysField) daysField.style.display = t === 'negative' ? 'none' : '';
+  const weightSection = document.getElementById('weight-section');
+  if (weightSection) weightSection.style.display = t === 'negative' ? 'none' : '';
 }
 
 function renderEmojiGrid() {
@@ -1747,9 +1863,9 @@ function saveHabit() {
 
   if (editingHabitId) {
     const h = state.habits.find(x => x.id === editingHabitId);
-    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.reminder = reminder; h.days = selectedType === 'positive' ? selectedDays : null; }
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.reminder = reminder; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; }
   } else {
-    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, reminder, days: selectedType === 'positive' ? selectedDays : null });
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, reminder, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false });
   }
   save();
   pushRemindersToSW();
