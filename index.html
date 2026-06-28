@@ -118,6 +118,8 @@
   .bar-labels { display: flex; gap: 6px; }
   .bar-label-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
   .bar-label-cell.today { color: var(--accent); }
+  .bar-scores { display: flex; gap: 6px; margin-top: 4px; }
+  .bar-score-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; }
 
   /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; justify-content: center; }
@@ -389,8 +391,7 @@
   <div class="panel" id="panel-stats">
     <header>
       <div>
-        <div class="wordmark">progress<span>.</span></div>
-        <div class="date-label">your journey</div>
+        <div class="wordmark">streak<span>.</span></div>
       </div>
     </header>
     <div class="stat-grid" id="stat-grid"></div>
@@ -403,6 +404,7 @@
       </div>
     </div>
     <div id="bar-chart" class="bar-chart"></div>
+    <div id="bar-scores" class="bar-scores"></div>
     <div id="bar-labels" class="bar-labels"></div>
 
     <div class="section-head" style="margin-top:28px;">
@@ -415,8 +417,7 @@
   <div class="panel" id="panel-settings">
     <header>
       <div>
-        <div class="wordmark">settings<span>.</span></div>
-        <div class="date-label">manage your data</div>
+        <div class="wordmark">streak<span>.</span></div>
       </div>
     </header>
 
@@ -570,7 +571,43 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v52 — Current</div>
+          <div class="cl-version">v57 — Current</div>
+          <ul class="cl-list">
+            <li>Score values moved from above bars to below them, between bars and axis labels</li>
+            <li>Cleaner bar chart with scores and labels in two rows beneath</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v56</div>
+          <ul class="cl-list">
+            <li>Log tab icon changed to ➕ emoji</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v55</div>
+          <ul class="cl-list">
+            <li>Log tab icon changed from ✦ to ＋</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v54</div>
+          <ul class="cl-list">
+            <li>Tabs renamed: Today → Log, Progress → Stats</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v53</div>
+          <ul class="cl-list">
+            <li>Progress and Settings panels now show streak. branding instead of page title</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v52</div>
           <ul class="cl-list">
             <li>Confetti animation fires when daily PB is reached</li>
             <li>Score ring turns gold when at or above all-time best</li>
@@ -1037,10 +1074,10 @@
 <!-- Bottom nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('today', this)">
-    <span class="icon">✦</span>Today
+    <span class="icon">➕</span>Log
   </button>
   <button class="nav-btn" onclick="switchTab('stats', this)">
-    <span class="icon">📊</span>Progress
+    <span class="icon">📊</span>Stats
   </button>
   <button class="nav-btn" onclick="switchTab('settings', this)">
     <span class="icon">⚙️</span>Settings
@@ -1157,7 +1194,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '52';
+const APP_VERSION = '57';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1506,11 +1543,16 @@ function renderChart() {
   document.getElementById('bar-chart').innerHTML = bars.map(b => {
     const col = b.score < 0 ? '#f87171' : b.score === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
     const h = Math.max(3, Math.round((Math.abs(b.score) / maxScore) * chartH));
-    const valStr = b.score === 0 ? '' : (b.score > 0 ? '+' : '') + b.score;
     return `<div class="bar-col">
-      <div class="bar-val">${valStr}</div>
+      <div class="bar-val"></div>
       <div class="bar-wrap"><div class="bar" style="height:${h}px;background:${col}"></div></div>
     </div>`;
+  }).join('');
+
+  document.getElementById('bar-scores').innerHTML = bars.map(b => {
+    const col = b.score < 0 ? '#f87171' : b.score === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
+    const txt = b.score === 0 ? '' : (b.score > 0 ? '+' : '') + b.score;
+    return `<div class="bar-score-cell" style="color:${col}">${txt}</div>`;
   }).join('');
 
   document.getElementById('bar-labels').innerHTML = bars.map(b =>
