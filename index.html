@@ -92,10 +92,12 @@
 
   .empty { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border); border-radius: 14px; margin-bottom: 8px; }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,18,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); justify-content: space-around; z-index: 100; }
-  .nav-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 0; flex: 1; border-radius: 10px; transition: color 0.15s; -webkit-tap-highlight-color: transparent; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,18,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); justify-content: space-around; z-index: 100; }
+  .nav-btn { background: none; border: none; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 0; flex: 1; position: relative; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+  .nav-btn .icon { font-size: 26px; line-height: 1; padding: 6px 0; }
+  .nav-btn::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 3px; background: var(--accent); border-radius: 0 0 3px 3px; transition: width 0.2s cubic-bezier(0.34,1.2,0.64,1); }
   .nav-btn.active { color: var(--accent); }
-  .nav-btn .icon { font-size: 22px; }
+  .nav-btn.active::before { width: 24px; }
 
   .panel { display: none; }
   .panel.active { display: block; }
@@ -571,7 +573,16 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v58 — Current</div>
+          <div class="cl-version">v59 — Current</div>
+          <ul class="cl-list">
+            <li>Modal title changed from "New task" to "New"</li>
+            <li>Tab labels removed — emoji icons only</li>
+            <li>Active tab indicated by a purple pill above the icon (modern browser style)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v58</div>
           <ul class="cl-list">
             <li>Removed the word "habit" from the entire app UI</li>
             <li>Log tab sections renamed to "Good" and "Bad"</li>
@@ -1086,20 +1097,20 @@
 <!-- Bottom nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('today', this)">
-    <span class="icon">➕</span>Log
+    <span class="icon">➕</span>
   </button>
   <button class="nav-btn" onclick="switchTab('stats', this)">
-    <span class="icon">📊</span>Stats
+    <span class="icon">📊</span>
   </button>
   <button class="nav-btn" onclick="switchTab('settings', this)">
-    <span class="icon">⚙️</span>Settings
+    <span class="icon">⚙️</span>
   </button>
 </nav>
 
 <!-- Habit Modal -->
 <div class="modal-overlay" id="habit-modal">
   <div class="modal">
-    <h2 id="modal-title">New task</h2>
+    <h2 id="modal-title">New</h2>
 
     <div class="field">
       <label>Type</label>
@@ -1206,7 +1217,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '58';
+const APP_VERSION = '59';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1911,7 +1922,7 @@ function updateDaysHint() {
 
 function openAddModal(type) {
   editingHabitId = null;
-  document.getElementById('modal-title').textContent = 'New task';
+  document.getElementById('modal-title').textContent = 'New';
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-pts-input').value = 5;
   document.getElementById('habit-modal-actions').innerHTML = `
