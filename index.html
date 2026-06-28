@@ -524,29 +524,29 @@
         <div class="setup-step">
           <div class="setup-num">1</div>
           <div class="setup-text">
-            <div class="setup-title">Add your tasks</div>
-            <div class="setup-desc">On the Log tab, tap ＋ to add a good task or a bad one to avoid. Give it a name, points value, and icon.</div>
+            <div class="setup-title">Add your activities</div>
+            <div class="setup-desc">On the Log tab, tap ＋ to add a good activity or a bad one to avoid. Give it a name, points value, and icon.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">2</div>
           <div class="setup-text">
             <div class="setup-title">Set active days</div>
-            <div class="setup-desc">In the task editor, choose which days of the week the task applies to. Unscheduled days won't break your streak.</div>
+            <div class="setup-desc">In the activity editor, choose which days of the week it applies to. Unscheduled days won't break your streak.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">3</div>
           <div class="setup-text">
             <div class="setup-title">Log each day</div>
-            <div class="setup-desc">Tap + to log a task. Tap − to undo. Good tasks add XP; bad tasks deduct XP when logged.</div>
+            <div class="setup-desc">Tap + to log an activity. Tap − to undo. Good activities add XP; bad activities deduct XP when logged.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">4</div>
           <div class="setup-text">
             <div class="setup-title">Add reminders</div>
-            <div class="setup-desc">Hold a task card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
+            <div class="setup-desc">Hold an activity card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
           </div>
         </div>
         <div class="setup-step">
@@ -571,7 +571,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v60 — Current</div>
+          <div class="cl-version">v61 — Current</div>
+          <ul class="cl-list">
+            <li>Replaced "task" / "tasks" with "activity" / "activities" throughout</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v60</div>
           <ul class="cl-list">
             <li>Active tab now shown with a filled rounded pill (Chrome-style) instead of a top bar</li>
           </ul>
@@ -1212,7 +1219,7 @@
     <div class="lu-heading">Level Up!</div>
     <div class="lu-level" id="lu-level">Level 2</div>
     <div class="lu-title" id="lu-title">Motivated</div>
-    <p class="lu-msg">Keep building those good tasks. Your streak is paying off.</p>
+    <p class="lu-msg">Keep building those good activities. Your streak is paying off.</p>
     <button class="lu-btn" onclick="closeLevelUpModal()">Let's go! 🚀</button>
   </div>
 </div>
@@ -1222,7 +1229,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '60';
+const APP_VERSION = '61';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1450,7 +1457,7 @@ function renderToday() {
 function renderHabitList(type) {
   const listEl = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
   let habits = state.habits.filter(h => h.type === type);
-  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add a task</div>`; return; }
+  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add an activity</div>`; return; }
 
   const log = todayLog();
 
@@ -1668,7 +1675,7 @@ function renderPersonalBests() {
     }
   }
 
-  el.innerHTML = html || '<div class="empty">Log some tasks to see personal bests</div>';
+  el.innerHTML = html || '<div class="empty">Log some activities to see personal bests</div>';
 }
 
 
@@ -2061,17 +2068,17 @@ function saveHabit() {
   pushRemindersToSW();
   closeModal('habit-modal');
   render();
-  showToast(editingHabitId ? 'Task updated' : '✅ Task added');
+  showToast(editingHabitId ? 'Activity updated' : '✅ Activity added');
 }
 
 function deleteHabit(id) {
-  if (!confirm('Delete this task?')) return;
+  if (!confirm('Delete this activity?')) return;
   state.habits = state.habits.filter(h => h.id !== id);
   save();
   pushRemindersToSW();
   closeModal('habit-modal');
   render();
-  showToast('Task deleted');
+  showToast('Activity deleted');
 }
 
 // ─── Build flat reminder list from habits ─────────────────────────────────────
