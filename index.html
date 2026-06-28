@@ -10,7 +10,7 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
-<title>Streak — Habit Tracker</title>
+<title>Streak — Life Tracker</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=Inter:wght@400;500;600&display=swap');
 
@@ -369,7 +369,7 @@
     <div id="notif-banner-wrap"></div>
 
     <div class="section-head">
-      <span class="section-title">✅ Good habits</span>
+      <span class="section-title">✅ Good</span>
       <div style="display:flex;gap:6px;align-items:center;">
         <button class="sort-btn" id="sort-pos-btn" onclick="cycleSort('positive')" title="Sort by tally">↕</button>
         <button class="add-btn" onclick="openAddModal('positive')">＋</button>
@@ -378,7 +378,7 @@
     <div id="positive-list"></div>
 
     <div class="section-head">
-      <span class="section-title">❌ Bad habits</span>
+      <span class="section-title">❌ Bad</span>
       <div style="display:flex;gap:6px;align-items:center;">
         <button class="sort-btn" id="sort-neg-btn" onclick="cycleSort('negative')" title="Sort by tally">↕</button>
         <button class="add-btn" onclick="openAddModal('negative')">＋</button>
@@ -428,7 +428,7 @@
           <div class="settings-item-icon">↺</div>
           <div class="settings-item-info">
             <div class="settings-item-label">Reset today</div>
-            <div class="settings-item-desc">Clear all of today's logged habit counts</div>
+            <div class="settings-item-desc">Clear all of today's logs</div>
           </div>
           <div class="settings-item-action">
             <button class="settings-btn" onclick="resetToday()">Reset</button>
@@ -438,7 +438,7 @@
           <div class="settings-item-icon">📤</div>
           <div class="settings-item-info">
             <div class="settings-item-label">Export data</div>
-            <div class="settings-item-desc">Download all habits and history as JSON</div>
+            <div class="settings-item-desc">Export all data as JSON</div>
           </div>
           <div class="settings-item-action">
             <button class="settings-btn" onclick="exportData()">Export</button>
@@ -459,7 +459,7 @@
           <div class="settings-item-icon">🗑️</div>
           <div class="settings-item-info">
             <div class="settings-item-label">Clear all data</div>
-            <div class="settings-item-desc">Delete all habits, logs, and streak history</div>
+            <div class="settings-item-desc">Clear all personalised data and restore to initial conditions</div>
           </div>
           <div class="settings-item-action">
             <button class="settings-btn danger" onclick="clearAllData()">Clear</button>
@@ -524,29 +524,29 @@
         <div class="setup-step">
           <div class="setup-num">1</div>
           <div class="setup-text">
-            <div class="setup-title">Add your habits</div>
-            <div class="setup-desc">On the Today tab, tap ＋ to add a good habit or a habit to break. Give it a name, points value, and icon.</div>
+            <div class="setup-title">Add your tasks</div>
+            <div class="setup-desc">On the Log tab, tap ＋ to add a good task or a bad one to avoid. Give it a name, points value, and icon.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">2</div>
           <div class="setup-text">
             <div class="setup-title">Set active days</div>
-            <div class="setup-desc">In the habit editor, choose which days of the week the habit applies to. Unscheduled days won't break your streak.</div>
+            <div class="setup-desc">In the task editor, choose which days of the week the task applies to. Unscheduled days won't break your streak.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">3</div>
           <div class="setup-text">
             <div class="setup-title">Log each day</div>
-            <div class="setup-desc">Tap + to log a habit. Tap − to undo. Good habits add XP; bad habits deduct XP when logged.</div>
+            <div class="setup-desc">Tap + to log a task. Tap − to undo. Good tasks add XP; bad tasks deduct XP when logged.</div>
           </div>
         </div>
         <div class="setup-step">
           <div class="setup-num">4</div>
           <div class="setup-text">
             <div class="setup-title">Add reminders</div>
-            <div class="setup-desc">Hold a habit card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
+            <div class="setup-desc">Hold a task card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
           </div>
         </div>
         <div class="setup-step">
@@ -571,7 +571,19 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v57 — Current</div>
+          <div class="cl-version">v58 — Current</div>
+          <ul class="cl-list">
+            <li>Removed the word "habit" from the entire app UI</li>
+            <li>Log tab sections renamed to "Good" and "Bad"</li>
+            <li>Edit screen modal title is now just "Edit"</li>
+            <li>Page title and manifest renamed to "Life Tracker"</li>
+            <li>Habits referred to as "tasks" throughout</li>
+            <li>Settings descriptions updated: export, reset, and clear all data</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v57</div>
           <ul class="cl-list">
             <li>Score values moved from above bars to below them, between bars and axis labels</li>
             <li>Cleaner bar chart with scores and labels in two rows beneath</li>
@@ -1087,13 +1099,13 @@
 <!-- Habit Modal -->
 <div class="modal-overlay" id="habit-modal">
   <div class="modal">
-    <h2 id="modal-title">New habit</h2>
+    <h2 id="modal-title">New task</h2>
 
     <div class="field">
       <label>Type</label>
       <div class="type-toggle">
-        <button class="type-btn pos selected" id="type-pos" onclick="setType('positive')">✅ Good habit</button>
-        <button class="type-btn neg" id="type-neg" onclick="setType('negative')">❌ Bad habit</button>
+        <button class="type-btn pos selected" id="type-pos" onclick="setType('positive')">✅ Good</button>
+        <button class="type-btn neg" id="type-neg" onclick="setType('negative')">❌ Bad</button>
       </div>
     </div>
     <div class="field">
@@ -1184,7 +1196,7 @@
     <div class="lu-heading">Level Up!</div>
     <div class="lu-level" id="lu-level">Level 2</div>
     <div class="lu-title" id="lu-title">Motivated</div>
-    <p class="lu-msg">Keep building those habits. Your streak is paying off.</p>
+    <p class="lu-msg">Keep building those good tasks. Your streak is paying off.</p>
     <button class="lu-btn" onclick="closeLevelUpModal()">Let's go! 🚀</button>
   </div>
 </div>
@@ -1194,7 +1206,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '57';
+const APP_VERSION = '58';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1422,7 +1434,7 @@ function renderToday() {
 function renderHabitList(type) {
   const listEl = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
   let habits = state.habits.filter(h => h.type === type);
-  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add a habit</div>`; return; }
+  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add a task</div>`; return; }
 
   const log = todayLog();
 
@@ -1640,7 +1652,7 @@ function renderPersonalBests() {
     }
   }
 
-  el.innerHTML = html || '<div class="empty">Log some habits to see personal bests</div>';
+  el.innerHTML = html || '<div class="empty">Log some tasks to see personal bests</div>';
 }
 
 
@@ -1899,7 +1911,7 @@ function updateDaysHint() {
 
 function openAddModal(type) {
   editingHabitId = null;
-  document.getElementById('modal-title').textContent = 'New habit';
+  document.getElementById('modal-title').textContent = 'New task';
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-pts-input').value = 5;
   document.getElementById('habit-modal-actions').innerHTML = `
@@ -1921,7 +1933,7 @@ function openEditModal(id) {
   const h = state.habits.find(x => x.id === id);
   if (!h) return;
   editingHabitId = id;
-  document.getElementById('modal-title').textContent = 'Edit habit';
+  document.getElementById('modal-title').textContent = 'Edit';
   document.getElementById('habit-name-input').value = h.name;
   document.getElementById('habit-pts-input').value = h.pts;
   setType(h.type);
@@ -2033,17 +2045,17 @@ function saveHabit() {
   pushRemindersToSW();
   closeModal('habit-modal');
   render();
-  showToast(editingHabitId ? 'Habit updated' : '✅ Habit added');
+  showToast(editingHabitId ? 'Task updated' : '✅ Task added');
 }
 
 function deleteHabit(id) {
-  if (!confirm('Delete this habit?')) return;
+  if (!confirm('Delete this task?')) return;
   state.habits = state.habits.filter(h => h.id !== id);
   save();
   pushRemindersToSW();
   closeModal('habit-modal');
   render();
-  showToast('Habit deleted');
+  showToast('Task deleted');
 }
 
 // ─── Build flat reminder list from habits ─────────────────────────────────────

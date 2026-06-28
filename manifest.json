@@ -1,7 +1,7 @@
 {
-  "name": "Streak — Habit Tracker",
+  "name": "Streak — Life Tracker",
   "short_name": "Streak",
-  "description": "Build good habits and track your daily streak",
+  "description": "Track your daily tasks and build better streaks",
   "start_url": "/streak/",
   "scope": "/streak/",
   "display": "standalone",
