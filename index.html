@@ -105,6 +105,7 @@
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
   .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; line-height: 1; }
   .stat-value.green { color: var(--positive); }
+  .stat-value.red { color: var(--negative); }
   .stat-value.purple { color: var(--accent); }
   .stat-value.gold { color: var(--gold); }
   .stat-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
@@ -145,22 +146,14 @@
   .emoji-opt { font-size: 22px; text-align: center; padding: 4px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
   .emoji-opt:active, .emoji-opt.selected { background: var(--accent-dim); }
 
-  /* Reminder section inside modal */
-  .reminder-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
-  .reminder-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
-  .reminder-section-title { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-  .reminder-toggle { width: 44px; height: 26px; background: var(--border); border-radius: 13px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; }
-  .reminder-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
-  .reminder-toggle.on { background: var(--accent); }
-  .reminder-toggle.on::after { transform: translateX(18px); }
-  .reminder-options { margin-top: 14px; display: none; }
-  .reminder-options.visible { display: block; }
-  .reminder-row { display: flex; gap: 8px; margin-bottom: 10px; }
-  .reminder-row .field { flex: 1; margin-bottom: 0; }
-  .hourly-row { display: none; gap: 8px; }
-  .hourly-row.visible { display: flex; }
-  .hourly-row .field { flex: 1; margin-bottom: 0; }
-  .notif-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  /* Weight tracking section in modal */
+  .weight-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+  .weight-section-head { display: flex; align-items: center; justify-content: space-between; }
+  .weight-section-title { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .weight-toggle { width: 44px; height: 26px; background: var(--border); border-radius: 13px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; }
+  .weight-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+  .weight-toggle.on { background: var(--accent); }
+  .weight-toggle.on::after { transform: translateX(18px); }
 
   .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
   .btn-primary { flex: 1; background: var(--accent); color: #0f0f12; border: none; border-radius: 12px; padding: 14px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
@@ -169,10 +162,6 @@
 
   .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; font-size: 14px; font-weight: 500; z-index: 300; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; max-width: calc(100vw - 32px); }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
-  .notif-banner { background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; }
-  .notif-banner p { font-size: 13px; color: var(--text); flex: 1; }
-  .notif-banner button { background: var(--accent); color: #0f0f12; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
   .sort-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; height: 28px; padding: 0 8px; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .sort-btn:active, .sort-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
@@ -314,6 +303,15 @@
   .setup-title { font-weight: 500; font-size: 14px; margin-bottom: 3px; }
   .setup-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+  .share-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .share-btn:active { background: var(--border); }
+
   /* Chart period toggle */
   .chart-toggle { display: flex; gap: 4px; }
   .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
@@ -366,8 +364,6 @@
       </div>
     </div>
 
-    <div id="notif-banner-wrap"></div>
-
     <div class="section-head">
       <span class="section-title">✅ Good</span>
       <div style="display:flex;gap:6px;align-items:center;">
@@ -393,8 +389,11 @@
       <div>
         <div class="wordmark">streak<span>.</span></div>
       </div>
+      <button class="share-btn" onclick="shareStats()" title="Share stats">↑</button>
     </header>
-    <div class="stat-grid" id="stat-grid"></div>
+    <div id="stat-grid-wrap">
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
     <div class="section-head">
       <span class="section-title" id="chart-title">📅 Last 7 days</span>
       <div class="chart-toggle">
@@ -469,30 +468,6 @@
     </div>
 
     <div class="settings-group">
-      <div class="settings-group-title">Notifications</div>
-      <div class="settings-row">
-        <div class="settings-item">
-          <div class="settings-item-icon">🔔</div>
-          <div class="settings-item-info">
-            <div class="settings-item-label">Permission</div>
-            <div class="settings-item-desc" id="notif-status-desc">Checking…</div>
-          </div>
-          <div class="settings-item-action" id="notif-status-action"></div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-icon">🧪</div>
-          <div class="settings-item-info">
-            <div class="settings-item-label">Send test notification</div>
-            <div class="settings-item-desc">Confirm notifications are working</div>
-          </div>
-          <div class="settings-item-action">
-            <button class="settings-btn" onclick="testNotification()">Test</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="settings-group">
       <div class="settings-group-title">App</div>
       <div class="settings-row">
         <div class="settings-item" id="install-item" style="display:none">
@@ -545,8 +520,8 @@
         <div class="setup-step">
           <div class="setup-num">4</div>
           <div class="setup-text">
-            <div class="setup-title">Add reminders</div>
-            <div class="setup-desc">Hold an activity card to edit it, then toggle the 🔔 Reminder switch. Choose once daily, weekdays, weekends, or hourly between set times.</div>
+            <div class="setup-title">Track weight</div>
+            <div class="setup-desc">Enable weight tracking in the activity editor to log the weight used each time you tap +. Your personal best weight is shown on the Stats tab.</div>
           </div>
         </div>
         <div class="setup-step">
@@ -571,7 +546,85 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v61 — Current</div>
+          <div class="cl-version">v71 — Current</div>
+          <ul class="cl-list">
+            <li>Fixed weight tracking toggle invisible after notification CSS was removed</li>
+            <li>Weight section now uses its own CSS classes independent of reminder styles</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v70</div>
+          <ul class="cl-list">
+            <li>Fixed missing step 5 in setup guide — weight tracking added as step 4, install and backup renumbered to 5 and 6</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v69</div>
+          <ul class="cl-list">
+            <li>Notifications removed from the app entirely</li>
+            <li>Reminder CSS, JS functions, and settings group all cleaned up</li>
+            <li>Setup guide step 4 updated to cover weight tracking instead of reminders</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v68</div>
+          <ul class="cl-list">
+            <li>Today's XP always shown in red regardless of value</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v67</div>
+          <ul class="cl-list">
+            <li>Stat cards now each have a unique colour: gold, green, purple, green/red</li>
+            <li>Best day changed from purple to green</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v66</div>
+          <ul class="cl-list">
+            <li>Share text updated to "Level up your life:" before the link</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v65</div>
+          <ul class="cl-list">
+            <li>Share text now reads "Start tracking your XP:" before the link</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v64</div>
+          <ul class="cl-list">
+            <li>Share button added to Stats tab header</li>
+            <li>Captures stat cards as an image and opens the device share sheet</li>
+            <li>Includes link to sambayford.github.io/streak in the share text</li>
+            <li>Falls back to downloading the image if sharing isn't supported</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v63</div>
+          <ul class="cl-list">
+            <li>Level card now shows all-time XP / XP needed for next level</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v62</div>
+          <ul class="cl-list">
+            <li>Level and total XP combined into one stat card showing Level N and XP progress</li>
+            <li>4th stat card now shows today's XP (green positive, red negative)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v61</div>
           <ul class="cl-list">
             <li>Replaced "task" / "tasks" with "activity" / "activities" throughout</li>
           </ul>
@@ -1161,48 +1214,12 @@
       <p class="days-hint" id="days-hint">Every day</p>
     </div>
 
-    <div class="reminder-section" id="weight-section">
-      <div class="reminder-section-head">
-        <span class="reminder-section-title">🏋️ Track weight</span>
-        <button class="reminder-toggle" id="weight-toggle-btn" onclick="toggleWeightTracking()"></button>
+    <div class="weight-section" id="weight-section">
+      <div class="weight-section-head">
+        <span class="weight-section-title">🏋️ Track weight</span>
+        <button class="weight-toggle" id="weight-toggle-btn" onclick="toggleWeightTracking()"></button>
       </div>
       <p style="font-size:12px;color:var(--muted);margin-top:10px;display:none" id="weight-hint">Each time you tap + you'll be prompted to enter the weight used.</p>
-    </div>
-
-    <!-- Per-habit reminder -->
-    <div class="reminder-section">
-      <div class="reminder-section-head">
-        <span class="reminder-section-title">🔔 Reminder</span>
-        <button class="reminder-toggle" id="reminder-toggle-btn" onclick="toggleReminderSection()"></button>
-      </div>
-      <div class="reminder-options" id="reminder-options">
-        <div class="reminder-row">
-          <div class="field">
-            <label>Schedule</label>
-            <select id="r-schedule" onchange="onScheduleChange()">
-              <option value="once">Once a day</option>
-              <option value="hourly">Hourly between hours</option>
-              <option value="weekdays">Weekdays only</option>
-              <option value="weekends">Weekends only</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Time</label>
-            <input type="time" id="r-time" value="08:00">
-          </div>
-        </div>
-        <div class="hourly-row" id="hourly-row">
-          <div class="field">
-            <label>From</label>
-            <input type="time" id="r-from" value="08:00">
-          </div>
-          <div class="field">
-            <label>To</label>
-            <input type="time" id="r-to" value="20:00">
-          </div>
-        </div>
-        <p class="notif-hint" id="r-hint">You'll get one nudge per day at this time.</p>
-      </div>
     </div>
 
     <div class="modal-actions" id="habit-modal-actions">
@@ -1229,7 +1246,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '61';
+const APP_VERSION = '71';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1451,7 +1468,6 @@ function renderToday() {
   renderHabitList('positive');
   renderHabitList('negative');
   renderLevel();
-  renderNotifBanner();
 }
 
 function renderHabitList(type) {
@@ -1473,16 +1489,14 @@ function renderHabitList(type) {
     const pts = h.type === 'positive' ? h.pts : -h.pts;
     const total = count * pts;
     const totalStr = total > 0 ? `+${total}` : `${total}`;
-    const hasReminder = h.reminder?.on;
-    const bellStr = hasReminder ? ' · 🔔' : '';
     const streak = state.habitStreaks?.[h.id] || 0;
     const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
     const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
     const weights = h.trackWeight && log[h.id + '_weights']?.length
       ? ` · ${log[h.id + '_weights'].join(', ')}kg` : '';
     const metaStr = count === 0
-      ? `${bellStr}${days}${streakStr}`.replace(/^ · /, '') || '—'
-      : `×${count} = ${totalStr} pts${bellStr}${days}${streakStr}${weights}`;
+      ? `${days}${streakStr}`.replace(/^ · /, '') || '—'
+      : `×${count} = ${totalStr} pts${days}${streakStr}${weights}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -1516,13 +1530,21 @@ function renderStats() {
   // All-time best score
   const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
 
+  const todayXP = state.habits.reduce((acc, h) => {
+    const count = (state.log[makeKey(0)] || {})[h.id] || 0;
+    return acc + (h.type === 'positive' ? count * h.pts : -(count * h.pts));
+  }, 0);
+
   document.getElementById('stat-grid').innerHTML = `
     <div class="stat-card"><div class="stat-value gold">${bestStreak()}</div><div class="stat-name">Best streak</div></div>
-    <div class="stat-card"><div class="stat-value green" style="${xp < 0 ? 'color:var(--negative)' : ''}">${xp}</div><div class="stat-name">Total XP earned</div></div>
-    <div class="stat-card"><div class="stat-value purple">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
+    <div class="stat-card"><div class="stat-value green">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
     <div class="stat-card">
-      <div class="stat-value" style="color:var(--accent)">Lvl ${lvl}</div>
-      <div class="stat-name">${lvl >= 50 ? 'Max level' : xpRemaining + ' XP to next'}</div>
+      <div class="stat-value" style="color:var(--accent)">Level ${lvl}</div>
+      <div class="stat-name">${lvl >= 50 ? `${xp} XP — Max level` : `${xp} / ${nextLvlXP} XP`}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value red">${todayXP > 0 ? '+' : ''}${todayXP}</div>
+      <div class="stat-name">Today's XP</div>
     </div>
   `;
 
@@ -1876,12 +1898,11 @@ function switchTab(name, btn) {
   document.getElementById('panel-' + name).classList.add('active');
   btn.classList.add('active');
   if (name === 'stats') renderStats();
-  if (name === 'settings') { renderNotifStatus(); updateInstallUI(); }
+  if (name === 'settings') { updateInstallUI(); }
 }
 
 // ─── Habit modal ──────────────────────────────────────────────────────────────
 let editingHabitId = null, selectedType = 'positive', selectedEmoji = '🏃';
-let reminderOn = false;
 let selectedDays = [0,1,2,3,4,5,6];
 let trackWeight = false; // all days by default
 
@@ -1948,7 +1969,6 @@ function openAddModal(type) {
   document.getElementById('days-field').style.display = (type === 'negative') ? 'none' : '';
   initWeightToggle(false);
   document.getElementById('weight-section').style.display = (type === 'negative') ? 'none' : '';
-  setReminderUI(false, { schedule: 'once', time: '08:00', from: '08:00', to: '20:00' });
   openModal('habit-modal');
 }
 
@@ -1969,46 +1989,7 @@ function openEditModal(id) {
   document.getElementById('days-field').style.display = h.type === 'negative' ? 'none' : '';
   initWeightToggle(h.trackWeight || false);
   document.getElementById('weight-section').style.display = h.type === 'negative' ? 'none' : '';
-  const r = h.reminder || {};
-  setReminderUI(r.on || false, { schedule: r.schedule || 'once', time: r.time || '08:00', from: r.from || '08:00', to: r.to || '20:00' });
   openModal('habit-modal');
-}
-
-function setReminderUI(on, opts) {
-  reminderOn = on;
-  const btn = document.getElementById('reminder-toggle-btn');
-  const optEl = document.getElementById('reminder-options');
-  btn.classList.toggle('on', on);
-  optEl.classList.toggle('visible', on);
-  document.getElementById('r-schedule').value = opts.schedule;
-  document.getElementById('r-time').value = opts.time;
-  document.getElementById('r-from').value = opts.from;
-  document.getElementById('r-to').value = opts.to;
-  onScheduleChange();
-}
-
-function toggleReminderSection() {
-  reminderOn = !reminderOn;
-  const btn = document.getElementById('reminder-toggle-btn');
-  const optEl = document.getElementById('reminder-options');
-  btn.classList.toggle('on', reminderOn);
-  optEl.classList.toggle('visible', reminderOn);
-  if (reminderOn && Notification.permission === 'default') requestNotifPermission();
-}
-
-function onScheduleChange() {
-  const sched = document.getElementById('r-schedule').value;
-  const isHourly = sched === 'hourly';
-  document.getElementById('hourly-row').classList.toggle('visible', isHourly);
-  document.getElementById('r-time').parentElement.parentElement.style.display = isHourly ? 'none' : '';
-
-  const hints = {
-    once: "You'll get one nudge per day at this time.",
-    weekdays: "You'll get one nudge on weekdays at this time.",
-    weekends: "You'll get one nudge on weekends at this time.",
-    hourly: "You'll get a nudge every hour between these times."
-  };
-  document.getElementById('r-hint').textContent = hints[sched] || '';
 }
 
 function setType(t) {
@@ -2048,24 +2029,15 @@ function onCustomEmoji(input) {
 function saveHabit() {
   const name = document.getElementById('habit-name-input').value.trim();
   const pts = Math.min(20, Math.max(1, parseInt(document.getElementById('habit-pts-input').value) || 5));
-  if (!name) { showToast('Give the habit a name'); return; }
-
-  const reminder = {
-    on: reminderOn,
-    schedule: document.getElementById('r-schedule').value,
-    time: document.getElementById('r-time').value,
-    from: document.getElementById('r-from').value,
-    to: document.getElementById('r-to').value,
-  };
+  if (!name) { showToast('Give it a name'); return; }
 
   if (editingHabitId) {
     const h = state.habits.find(x => x.id === editingHabitId);
-    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.reminder = reminder; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; }
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; }
   } else {
-    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, reminder, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false });
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false });
   }
   save();
-  pushRemindersToSW();
   closeModal('habit-modal');
   render();
   showToast(editingHabitId ? 'Activity updated' : '✅ Activity added');
@@ -2075,54 +2047,22 @@ function deleteHabit(id) {
   if (!confirm('Delete this activity?')) return;
   state.habits = state.habits.filter(h => h.id !== id);
   save();
-  pushRemindersToSW();
   closeModal('habit-modal');
   render();
   showToast('Activity deleted');
 }
 
-// ─── Build flat reminder list from habits ─────────────────────────────────────
-// Each reminder entry: { id, label, icon, time, days }
-// For hourly we expand into one entry per hour
-function buildReminders() {
-  const list = [];
-  for (const h of state.habits) {
-    const r = h.reminder;
-    if (!r?.on) continue;
-    const base = { habitId: h.id, label: h.name, icon: h.icon };
-    if (r.schedule === 'hourly') {
-      const [fh] = r.from.split(':').map(Number);
-      const [th] = r.to.split(':').map(Number);
-      for (let hr = fh; hr <= th; hr++) {
-        list.push({ ...base, id: `${h.id}_${hr}`, time: `${String(hr).padStart(2,'0')}:00`, days: 'daily' });
-      }
-    } else {
-      const days = r.schedule === 'weekdays' ? 'weekdays' : r.schedule === 'weekends' ? 'weekends' : 'daily';
-      list.push({ ...base, id: `${h.id}_once`, time: r.time, days });
-    }
-  }
-  return list;
-}
-
 async function updateApp() {
   if (!confirm('This will save your data, clear the app cache, and reload. Continue?')) return;
-
-  // 1. Snapshot current state to sessionStorage so it survives the reload
   sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
-
-  // 2. Unregister service workers so the new SW is fetched fresh
   if ('serviceWorker' in navigator) {
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.map(r => r.unregister()));
   }
-
-  // 3. Clear all caches
   if ('caches' in window) {
     const keys = await caches.keys();
     await Promise.all(keys.map(k => caches.delete(k)));
   }
-
-  // 4. Reload — on return, restoreAfterUpdate() will re-import
   location.reload(true);
 }
 
@@ -2133,24 +2073,18 @@ function restoreAfterUpdate() {
   try {
     const data = JSON.parse(raw);
     if (!Array.isArray(data.habits)) return;
-    state = {
-      habits: data.habits || [],
-      log: data.log || {},
-      streak: data.streak || 0,
-      lastActive: data.lastActive || null
-    };
+    state = { habits: data.habits || [], log: data.log || {}, habitStreaks: data.habitStreaks || {} };
     save();
     showToast('✅ Data restored after update');
   } catch {}
 }
+
 let swReg = null;
 
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   try {
     swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-
-    // Wait for SW to be active
     const sw = swReg.installing || swReg.waiting || swReg.active;
     if (sw && sw.state !== 'activated') {
       await new Promise(res => sw.addEventListener('statechange', e => {
@@ -2158,23 +2092,11 @@ async function registerSW() {
       }));
     }
     swReg = await navigator.serviceWorker.getRegistration('./');
-    pushRemindersToSW();
-
-    navigator.serviceWorker.addEventListener('message', e => {
-      if (e.data?.type === 'GET_REMINDERS') pushRemindersToSW();
-    });
-
-    setInterval(pushHeartbeat, 60 * 1000);
-
-    if ('periodicSync' in swReg) {
-      try { await swReg.periodicSync.register('habit-check', { minInterval: 60 * 1000 }); } catch {}
-    }
-
-    // Check for a new version by comparing APP_VERSION against what SW last saw
     checkForUpdate();
-
   } catch (e) { console.warn('SW failed:', e); }
 }
+
+function getActiveSW() { return swReg?.active || navigator.serviceWorker?.controller; }
 
 async function checkForUpdate() {
   try {
@@ -2188,7 +2110,6 @@ async function checkForUpdate() {
     if (!match) return;
     const remoteVersion = parseInt(match[1], 10);
     const localVersion  = parseInt(APP_VERSION, 10);
-    // Only prompt if remote is strictly newer — never if equal or older
     if (remoteVersion > localVersion) {
       if (confirm(`A new version of Streak is available (v${remoteVersion}). Update now?\n\nYour data will be saved automatically.`)) {
         autoUpdate();
@@ -2208,36 +2129,6 @@ async function autoUpdate() {
     await Promise.all(regs.map(r => r.unregister()));
   }
   location.reload(true);
-}
-
-function getActiveSW() { return swReg?.active || navigator.serviceWorker?.controller; }
-
-function pushRemindersToSW() {
-  const sw = getActiveSW();
-  if (!sw) return;
-  sw.postMessage({ type: 'SCHEDULE', reminders: buildReminders() });
-}
-
-function pushHeartbeat() {
-  const sw = getActiveSW();
-  if (sw) sw.postMessage({ type: 'HEARTBEAT' });
-}
-
-// ─── Notifications ────────────────────────────────────────────────────────────
-function renderNotifBanner() {
-  const el = document.getElementById('notif-banner-wrap');
-  if (!('Notification' in window) || Notification.permission === 'granted') { el.innerHTML = ''; return; }
-  if (Notification.permission === 'denied') {
-    el.innerHTML = `<div class="notif-banner"><p>🔕 Notifications blocked. Enable in your device settings.</p></div>`; return;
-  }
-  el.innerHTML = `<div class="notif-banner"><p>Enable notifications to use habit reminders.</p><button onclick="requestNotifPermission()">Enable</button></div>`;
-}
-
-async function requestNotifPermission() {
-  const perm = await Notification.requestPermission();
-  renderNotifBanner();
-  renderNotifStatus();
-  if (perm === 'granted') { showToast('🔔 Notifications enabled'); pushRemindersToSW(); }
 }
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
@@ -2300,6 +2191,50 @@ function triggerConfetti() {
   if (frame) cancelAnimationFrame(frame);
   frame = requestAnimationFrame(draw);
 }
+
+// ─── Share stats ──────────────────────────────────────────────────────────────
+async function shareStats() {
+  showToast('Preparing image…');
+  if (!window.html2canvas) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  const el = document.getElementById('stat-grid-wrap');
+  const canvas = await html2canvas(el, {
+    backgroundColor: '#0f0f12',
+    scale: 2,
+    useCORS: true,
+    logging: false
+  });
+
+  const url = 'https://sambayford.github.io/streak';
+
+  canvas.toBlob(async blob => {
+    const file = new File([blob], 'streak-stats.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'My Streak Stats',
+          text: `Check out my stats on Streak — Life Tracker\nLevel up your life:\n${url}`
+        });
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    // Fallback: download image
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'streak-stats.png';
+    a.click();
+    showToast('Image saved — share manually');
+  }, 'image/png');
+}
+
 let deferredInstallPrompt = null;
 const isPWA = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
@@ -2357,7 +2292,6 @@ function clearAllData() {
   if (!confirm('Delete ALL habits, logs, and streaks? This cannot be undone.')) return;
   localStorage.removeItem('streak_v3');
   state = { habits: [], log: {}, streak: 0, lastActive: null };
-  pushRemindersToSW();
   render();
   showToast('All data cleared');
 }
@@ -2390,42 +2324,14 @@ function importData(e) {
         lastActive: data.lastActive || null
       };
       save();
-      pushRemindersToSW();
       render();
-      showToast(`📥 Imported ${data.habits.length} habits`);
+      showToast(`📥 Imported ${data.habits.length} activities`);
     } catch {
       showToast('⚠️ Invalid backup file');
     }
     e.target.value = '';
   };
   reader.readAsText(file);
-}
-
-function testNotification() {
-  const sw = getActiveSW();
-  if (sw) sw.postMessage({ type: 'FIRE_TEST' });
-  else new Notification('🔔 Test notification', { body: 'Notifications are working!' });
-  showToast('Test sent');
-}
-
-function renderNotifStatus() {
-  const desc = document.getElementById('notif-status-desc');
-  const action = document.getElementById('notif-status-action');
-  if (!desc) return;
-  if (!('Notification' in window)) {
-    desc.textContent = 'Not supported in this browser';
-    action.innerHTML = ''; return;
-  }
-  if (Notification.permission === 'granted') {
-    desc.textContent = 'Notifications are enabled';
-    action.innerHTML = '';
-  } else if (Notification.permission === 'denied') {
-    desc.textContent = 'Blocked — enable in device settings';
-    action.innerHTML = '';
-  } else {
-    desc.textContent = 'Not yet granted';
-    action.innerHTML = `<button class="settings-btn" onclick="requestNotifPermission()">Enable</button>`;
-  }
 }
 
 // ─── Modal helpers ────────────────────────────────────────────────────────────
@@ -2456,11 +2362,11 @@ function seedIfEmpty() {
     if (old.habits?.length) { state.habits = old.habits; state.log = old.log || {}; state.streak = old.streak || 0; state.lastActive = old.lastActive || null; save(); return; }
   } catch {}
   state.habits = [
-    { id: 'h1', name: 'Morning exercise', pts: 10, type: 'positive', icon: '🏃', reminder: { on: false } },
-    { id: 'h2', name: 'Drink 8 glasses of water', pts: 5, type: 'positive', icon: '💧', reminder: { on: false } },
-    { id: 'h3', name: 'Read for 20 minutes', pts: 5, type: 'positive', icon: '📚', reminder: { on: false } },
-    { id: 'h4', name: 'Skipped junk food', pts: 8, type: 'positive', icon: '🥗', reminder: { on: false } },
-    { id: 'h5', name: 'Too much screen time', pts: 5, type: 'negative', icon: '📱', reminder: { on: false } },
+    { id: 'h1', name: 'Morning exercise', pts: 10, type: 'positive', icon: '🏃' },
+    { id: 'h2', name: 'Drink 8 glasses of water', pts: 5, type: 'positive', icon: '💧' },
+    { id: 'h3', name: 'Read for 20 minutes', pts: 5, type: 'positive', icon: '📚' },
+    { id: 'h4', name: 'Skipped junk food', pts: 8, type: 'positive', icon: '🥗' },
+    { id: 'h5', name: 'Too much screen time', pts: 5, type: 'negative', icon: '📱' },
   ];
   save();
 }
