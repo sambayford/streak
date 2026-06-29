@@ -542,11 +542,34 @@
     </div>
 
     <div class="settings-group">
+      <div class="settings-group-title">Feedback</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">💬</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Issues & suggestions</div>
+            <div class="settings-item-desc">Report a bug or request a feature on GitHub</div>
+          </div>
+          <div class="settings-item-action">
+            <a href="https://github.com/sambayford/streak/issues" target="_blank" rel="noopener" class="settings-btn" style="text-decoration:none;display:inline-block">Open</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
       <div class="settings-group-title">What's new</div>
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v71 — Current</div>
+          <div class="cl-version">v72 — Current</div>
+          <ul class="cl-list">
+            <li>Feedback section added to Settings linking to GitHub issues page</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v71</div>
           <ul class="cl-list">
             <li>Fixed weight tracking toggle invisible after notification CSS was removed</li>
             <li>Weight section now uses its own CSS classes independent of reminder styles</li>
@@ -1246,7 +1269,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '71';
+const APP_VERSION = '72';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
