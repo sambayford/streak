@@ -116,11 +116,13 @@
   .bar-wrap { width: 100%; display: flex; align-items: flex-end; justify-content: center; flex: 1; }
   .bar { width: 100%; border-radius: 5px 5px 0 0; transition: height 0.4s cubic-bezier(0.34,1.2,0.64,1); min-height: 3px; }
   .bar-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); position: absolute; bottom: 6px; text-align: center; width: calc(100% / 7); }
-  .bar-labels { display: flex; gap: 6px; }
+  .bar-labels { display: flex; gap: 6px; margin-top: 8px; }
   .bar-label-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
   .bar-label-cell.today { color: var(--accent); }
-  .bar-scores { display: flex; gap: 6px; margin-top: 4px; }
+  .bar-scores { display: flex; gap: 6px; }
   .bar-score-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; }
+  .bar-weights { display: flex; gap: 6px; margin-top: 2px; }
+  .bar-weight-cell { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); line-height: 1.4; word-break: break-word; }
 
   /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; justify-content: center; }
@@ -312,6 +314,14 @@
   }
   .share-btn:active { background: var(--border); }
 
+  .chart-activity-select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
+    margin-bottom: 14px;
+  }
+  .chart-activity-select:focus { border-color: var(--accent); }
+
   /* Chart period toggle */
   .chart-toggle { display: flex; gap: 4px; }
   .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
@@ -385,14 +395,16 @@
 
   <!-- STATS -->
   <div class="panel" id="panel-stats">
-    <header>
-      <div>
-        <div class="wordmark">streak<span>.</span></div>
+    <div id="stats-capture-area">
+      <header>
+        <div>
+          <div class="wordmark">streak<span>.</span></div>
+        </div>
+        <button class="share-btn" onclick="shareStats()" title="Share stats">↑</button>
+      </header>
+      <div id="stat-grid-wrap">
+        <div class="stat-grid" id="stat-grid"></div>
       </div>
-      <button class="share-btn" onclick="shareStats()" title="Share stats">↑</button>
-    </header>
-    <div id="stat-grid-wrap">
-      <div class="stat-grid" id="stat-grid"></div>
     </div>
     <div class="section-head">
       <span class="section-title" id="chart-title">📅 Last 7 days</span>
@@ -402,9 +414,13 @@
         <button class="chart-toggle-btn" id="ct-months" onclick="setChartPeriod('months', this)">7M</button>
       </div>
     </div>
+    <select id="chart-activity-select" class="chart-activity-select" onchange="setChartActivity(this.value)">
+      <option value="">All activities (XP)</option>
+    </select>
     <div id="bar-chart" class="bar-chart"></div>
-    <div id="bar-scores" class="bar-scores"></div>
     <div id="bar-labels" class="bar-labels"></div>
+    <div id="bar-scores" class="bar-scores"></div>
+    <div id="bar-weights" class="bar-weights"></div>
 
     <div class="section-head" style="margin-top:28px;">
       <span class="section-title">🏆 Personal bests</span>
@@ -562,7 +578,50 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v72 — Current</div>
+          <div class="cl-version">v77 — Current</div>
+          <ul class="cl-list">
+            <li>Multiple weights logged for a single bar now stack vertically instead of being squeezed onto one line</li>
+            <li>Fixes weights overflowing or wrapping awkwardly below the bar graph when several entries exist for a day/week/month</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v76</div>
+          <ul class="cl-list">
+            <li>Weight records cleared when an activity's count is reduced to 0 for the day</li>
+            <li>Decrementing count now also removes the most recent weight entry to stay in sync</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v75</div>
+          <ul class="cl-list">
+            <li>Activity selector added above the bar chart</li>
+            <li>Selecting an activity filters the chart to show its count per day/week/month</li>
+            <li>Below each bar shows ×count, plus weights logged if the activity tracks weight</li>
+            <li>"All activities (XP)" option restores the original score-based chart</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v74</div>
+          <ul class="cl-list">
+            <li>Reverted wordmark position to original header layout, consistent across all tabs</li>
+            <li>Stat cards restored to full original width</li>
+            <li>Share capture now includes header with logo, share button hidden in the screenshot</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v73</div>
+          <ul class="cl-list">
+            <li>Streak logo now included in the shared stats image</li>
+            <li>Stats header simplified — wordmark moved inside the shareable card</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v72</div>
           <ul class="cl-list">
             <li>Feedback section added to Settings linking to GitHub issues page</li>
           </ul>
@@ -1269,7 +1328,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '72';
+const APP_VERSION = '77';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1316,6 +1375,23 @@ function goToToday() {
 const sortState = { positive: 'manual', negative: 'manual' };
 
 let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
+let chartActivityId = ''; // '' = all activities (XP mode), else specific activity id
+
+function setChartActivity(id) {
+  chartActivityId = id;
+  renderChart();
+}
+
+function populateChartActivitySelect() {
+  const sel = document.getElementById('chart-activity-select');
+  if (!sel) return;
+  const current = chartActivityId;
+  sel.innerHTML = '<option value="">All activities (XP)</option>' +
+    state.habits.map(h => `<option value="${h.id}">${h.icon} ${h.name}</option>`).join('');
+  // Restore selection if still valid, else reset
+  if (state.habits.some(h => h.id === current)) sel.value = current;
+  else { chartActivityId = ''; sel.value = ''; }
+}
 
 function setChartPeriod(period, btn) {
   chartPeriod = period;
@@ -1573,32 +1649,47 @@ function renderStats() {
 
   renderChart();
   renderPersonalBests();
+  populateChartActivitySelect();
+}
+
+function getDayMetric(key) {
+  // Returns { value, weights } for a given date key, depending on chartActivityId
+  if (!chartActivityId) {
+    return { value: calcScore(key), weights: [] };
+  }
+  const log = state.log[key] || {};
+  const count = log[chartActivityId] || 0;
+  const weights = log[chartActivityId + '_weights'] || [];
+  return { value: count, weights };
 }
 
 function renderChart() {
   const chartH = 148;
   let bars = [];
+  const isActivityMode = !!chartActivityId;
+  const activity = isActivityMode ? state.habits.find(h => h.id === chartActivityId) : null;
 
   if (chartPeriod === 'days') {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      const score = calcScore(key);
+      const m = getDayMetric(key);
       const label = i === 0 ? 'today' : d.toLocaleDateString('en-AU', { weekday: 'short' });
-      bars.push({ label, score, isNow: i === 0 });
+      bars.push({ label, value: m.value, weights: m.weights, isNow: i === 0 });
     }
   } else if (chartPeriod === 'weeks') {
     for (let i = 6; i >= 0; i--) {
-      // Week ending (7*i) days ago
-      let weekScore = 0;
+      let total = 0; let weights = [];
       for (let d = 0; d < 7; d++) {
         const day = new Date(); day.setDate(day.getDate() - (i * 7 + d));
         const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
-        weekScore += calcScore(key);
+        const m = getDayMetric(key);
+        total += m.value;
+        weights = weights.concat(m.weights);
       }
       const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() - i * 7);
       const label = i === 0 ? 'now' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-      bars.push({ label, score: weekScore, isNow: i === 0 });
+      bars.push({ label, value: total, weights, isNow: i === 0 });
     }
   } else if (chartPeriod === 'months') {
     for (let i = 6; i >= 0; i--) {
@@ -1608,36 +1699,60 @@ function renderChart() {
       const year = ref.getFullYear();
       const month = ref.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      let monthScore = 0;
+      let total = 0; let weights = [];
       for (let d = 1; d <= daysInMonth; d++) {
         const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        monthScore += calcScore(key);
+        const m = getDayMetric(key);
+        total += m.value;
+        weights = weights.concat(m.weights);
       }
       const label = i === 0 ? 'now' : ref.toLocaleDateString('en-AU', { month: 'short' });
-      bars.push({ label, score: monthScore, isNow: i === 0 });
+      bars.push({ label, value: total, weights, isNow: i === 0 });
     }
   }
 
-  const maxScore = Math.max(...bars.map(b => Math.abs(b.score)), 1);
+  const maxVal = Math.max(...bars.map(b => Math.abs(b.value)), 1);
 
   document.getElementById('bar-chart').innerHTML = bars.map(b => {
-    const col = b.score < 0 ? '#f87171' : b.score === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
-    const h = Math.max(3, Math.round((Math.abs(b.score) / maxScore) * chartH));
+    let col;
+    if (isActivityMode) {
+      col = b.value === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
+    } else {
+      col = b.value < 0 ? '#f87171' : b.value === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
+    }
+    const h = Math.max(3, Math.round((Math.abs(b.value) / maxVal) * chartH));
     return `<div class="bar-col">
       <div class="bar-val"></div>
       <div class="bar-wrap"><div class="bar" style="height:${h}px;background:${col}"></div></div>
     </div>`;
   }).join('');
 
-  document.getElementById('bar-scores').innerHTML = bars.map(b => {
-    const col = b.score < 0 ? '#f87171' : b.score === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
-    const txt = b.score === 0 ? '' : (b.score > 0 ? '+' : '') + b.score;
-    return `<div class="bar-score-cell" style="color:${col}">${txt}</div>`;
-  }).join('');
-
   document.getElementById('bar-labels').innerHTML = bars.map(b =>
     `<div class="bar-label-cell ${b.isNow ? 'today' : ''}">${b.label}</div>`
   ).join('');
+
+  document.getElementById('bar-scores').innerHTML = bars.map(b => {
+    if (isActivityMode) {
+      const col = b.value === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
+      const countTxt = b.value === 0 ? '' : `×${b.value}`;
+      return `<div class="bar-score-cell" style="color:${col}">${countTxt}</div>`;
+    }
+    const col = b.value < 0 ? '#f87171' : b.value === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
+    const txt = b.value === 0 ? '' : (b.value > 0 ? '+' : '') + b.value;
+    return `<div class="bar-score-cell" style="color:${col}">${txt}</div>`;
+  }).join('');
+
+  if (isActivityMode && activity?.trackWeight) {
+    document.getElementById('bar-weights').style.display = '';
+    document.getElementById('bar-weights').innerHTML = bars.map(b => {
+      const col = b.isNow ? '#a78bfa' : 'var(--muted)';
+      const txt = b.weights.length ? b.weights.map(w => `<span>${w}kg</span>`).join('') : '';
+      return `<div class="bar-weight-cell" style="color:${col}">${txt}</div>`;
+    }).join('');
+  } else {
+    document.getElementById('bar-weights').style.display = 'none';
+    document.getElementById('bar-weights').innerHTML = '';
+  }
 }
 
 function calcPersonalBests() {
@@ -1775,6 +1890,15 @@ function commitAdjust(id, key, delta, h, weight) {
   if (weight !== null && delta > 0) {
     if (!state.log[key][id + '_weights']) state.log[key][id + '_weights'] = [];
     state.log[key][id + '_weights'].push(weight);
+  }
+
+  // When count is decremented back to 0, clear any weight records for that day
+  if (next === 0 && state.log[key][id + '_weights']) {
+    delete state.log[key][id + '_weights'];
+  } else if (delta < 0 && state.log[key][id + '_weights']?.length) {
+    // Decrementing but not yet at 0 — drop the most recent weight entry to stay in sync
+    state.log[key][id + '_weights'].pop();
+    if (state.log[key][id + '_weights'].length === 0) delete state.log[key][id + '_weights'];
   }
 
   const pts = h.type === 'positive' ? h.pts : -h.pts;
@@ -2227,13 +2351,18 @@ async function shareStats() {
     });
   }
 
-  const el = document.getElementById('stat-grid-wrap');
+  const el = document.getElementById('stats-capture-area');
+  const shareBtn = document.querySelector('.share-btn');
+  shareBtn.style.visibility = 'hidden';
+
   const canvas = await html2canvas(el, {
     backgroundColor: '#0f0f12',
     scale: 2,
     useCORS: true,
     logging: false
   });
+
+  shareBtn.style.visibility = 'visible';
 
   const url = 'https://sambayford.github.io/streak';
 
