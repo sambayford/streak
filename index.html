@@ -518,7 +518,7 @@
           <div class="setup-num">1</div>
           <div class="setup-text">
             <div class="setup-title">Add your activities</div>
-            <div class="setup-desc">On the Log tab, tap ＋ to add a good activity or a bad one to avoid. Give it a name, points value, and icon.</div>
+            <div class="setup-desc">On the Log tab, tap ＋ to add a good activity or a bad one to avoid. Give it a name, XP value, and icon.</div>
           </div>
         </div>
         <div class="setup-step">
@@ -580,7 +580,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v79 — Current</div>
+          <div class="cl-version">v80 — Current</div>
+          <ul class="cl-list">
+            <li>UI wording: "points" → "XP" and "habit" → "activity" throughout the app</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v79</div>
           <ul class="cl-list">
             <li>Added CLAUDE_INSTRUCTIONS.md to the repo (dev-facing only, not shown in-app)</li>
             <li>Documents repo workflow, changelog convention, and Sam's preferences for new Claude conversations</li>
@@ -1289,7 +1296,7 @@
       <input type="text" id="habit-name-input" placeholder="e.g. Morning run" maxlength="40">
     </div>
     <div class="field">
-      <label>Points (1–20)</label>
+      <label>XP (1–20)</label>
       <input type="number" id="habit-pts-input" value="5" min="1" max="20">
     </div>
     <div class="field">
@@ -1324,7 +1331,7 @@
 
     <div class="modal-actions" id="habit-modal-actions">
       <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
-      <button class="btn-primary" onclick="saveHabit()">Save habit</button>
+      <button class="btn-primary" onclick="saveHabit()">Save activity</button>
     </div>
   </div>
 </div>
@@ -1632,7 +1639,7 @@ function renderHabitList(type) {
       ? ` · ${log[h.id + '_weights'].join(', ')}kg` : '';
     const metaStr = count === 0
       ? `${days}${streakStr}`.replace(/^ · /, '') || '—'
-      : `×${count} = ${totalStr} pts${days}${streakStr}${weights}`;
+      : `×${count} = ${totalStr} XP${days}${streakStr}${weights}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -1941,7 +1948,7 @@ function commitAdjust(id, key, delta, h, weight) {
   const pts = h.type === 'positive' ? h.pts : -h.pts;
   const change = delta * pts;
   const weightStr = weight !== null ? ` · ${weight}kg` : '';
-  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} pts${weightStr}` : `${h.icon} removed one`);
+  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} XP${weightStr}` : `${h.icon} removed one`);
   updateStreaks();
   save();
   render();
@@ -2144,7 +2151,7 @@ function openAddModal(type) {
   document.getElementById('habit-pts-input').value = 5;
   document.getElementById('habit-modal-actions').innerHTML = `
     <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
-    <button class="btn-primary" onclick="saveHabit()">Save habit</button>`;
+    <button class="btn-primary" onclick="saveHabit()">Save activity</button>`;
   setType(type || 'positive');
   selectedEmoji = EMOJIS[0];
   renderEmojiGrid();
@@ -2478,7 +2485,7 @@ function resetToday() {
 }
 
 function clearAllData() {
-  if (!confirm('Delete ALL habits, logs, and streaks? This cannot be undone.')) return;
+  if (!confirm('Delete ALL activities, logs, and streaks? This cannot be undone.')) return;
   localStorage.removeItem('streak_v3');
   state = { habits: [], log: {}, streak: 0, lastActive: null };
   render();
@@ -2505,7 +2512,7 @@ function importData(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!Array.isArray(data.habits)) throw new Error('Invalid file');
-      if (!confirm(`Import ${data.habits.length} habits? This will replace your current data.`)) return;
+      if (!confirm(`Import ${data.habits.length} activities? This will replace your current data.`)) return;
       state = {
         habits: data.habits || [],
         log: data.log || {},
