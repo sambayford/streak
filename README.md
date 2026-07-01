@@ -1,6 +1,6 @@
 # Streak — Life Tracker
 
-Track your daily habits and build better streaks. Level up your life.
+Track your daily activities and level up your life.
 
 **Live app:** https://sambayford.github.io/streak/
 
