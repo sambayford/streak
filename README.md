@@ -1,17 +1,17 @@
 # Streak — Life Tracker
 
-Track your daily activities and level up your life.
+Track your daily activities and build better streaks. Level up your life.
 
 **Live app:** https://sambayford.github.io/streak/
 
 ## What it does
 
-Streak is a lightweight habit and life tracker. Log positive and negative
-habits each day, earn points, and watch your daily score build into
+Streak is a lightweight activity and life tracker. Log positive and negative
+activities each day, earn XP, and watch your daily score build into
 longer-term stats — streaks, weekly/monthly trends, and level-ups as you
-rack up points.
+rack up XP.
 
-- Track positive and negative habits separately, each with its own point
+- Track positive and negative activities separately, each with its own XP
   value (weight)
 - Daily score view with an at-a-glance score arc
 - Stats panel with charts across days/weeks/months
