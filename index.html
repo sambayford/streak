@@ -360,9 +360,11 @@
     <div class="date-nav-row">
       <div class="today-date-big" id="today-date">Today</div>
       <div class="date-nav-btns">
+        <button class="date-circle-btn" onclick="openDatePicker()" title="Jump to date">«</button>
         <button class="date-circle-btn" onclick="shiftDay(-1)">‹</button>
         <button class="date-circle-btn" onclick="shiftDay(1)" id="date-next-btn">›</button>
         <button class="date-circle-btn" id="back-today-btn" onclick="goToToday()" title="Go to today">»</button>
+        <input type="date" id="date-jump-input" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;" onchange="goToDate(this.value)">
         <div class="score-circle">
           <svg width="40" height="40" viewBox="0 0 64 64">
             <circle cx="32" cy="32" r="26" stroke="#2e2e38" stroke-width="5" fill="none"/>
@@ -578,7 +580,15 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v77 — Current</div>
+          <div class="cl-version">v78 — Current</div>
+          <ul class="cl-list">
+            <li>Added « button left of the ‹ arrow on the Today/Log tab</li>
+            <li>Opens a native date picker to jump straight to any past date instead of stepping day by day</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v77</div>
           <ul class="cl-list">
             <li>Multiple weights logged for a single bar now stack vertically instead of being squeezed onto one line</li>
             <li>Fixes weights overflowing or wrapping awkwardly below the bar graph when several entries exist for a day/week/month</li>
@@ -1368,6 +1378,25 @@ function shiftDay(delta) {
 
 function goToToday() {
   viewOffset = 0;
+  renderToday();
+}
+
+function openDatePicker() {
+  const input = document.getElementById('date-jump-input');
+  input.max = todayKey();
+  input.value = viewKey();
+  if (input.showPicker) { input.showPicker(); } else { input.click(); }
+}
+
+function goToDate(dateStr) {
+  if (!dateStr) return;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  target.setHours(0,0,0,0);
+  const diffDays = Math.round((target - today) / 86400000);
+  if (diffDays > 0) return; // no future dates
+  viewOffset = diffDays;
   renderToday();
 }
 
