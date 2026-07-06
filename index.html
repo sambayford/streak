@@ -580,7 +580,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v81 — Current</div>
+          <div class="cl-version">v82 — Current</div>
+          <ul class="cl-list">
+            <li>Weekly (7W) bar chart shows "last 7 days" instead of "now"</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v81</div>
           <ul class="cl-list">
             <li>Monthly bar chart shows the current month's name instead of "now"</li>
           </ul>
@@ -1360,7 +1367,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '81';
+const APP_VERSION = '82';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1739,7 +1746,7 @@ function renderChart() {
         weights = weights.concat(m.weights);
       }
       const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() - i * 7);
-      const label = i === 0 ? 'now' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+      const label = i === 0 ? 'last 7 days' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
       bars.push({ label, value: total, weights, isNow: i === 0 });
     }
   } else if (chartPeriod === 'months') {
