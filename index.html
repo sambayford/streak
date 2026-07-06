@@ -580,7 +580,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v80 — Current</div>
+          <div class="cl-version">v81 — Current</div>
+          <ul class="cl-list">
+            <li>Monthly bar chart shows the current month's name instead of "now"</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v80</div>
           <ul class="cl-list">
             <li>UI wording: "points" → "XP" and "habit" → "activity" throughout the app</li>
           </ul>
@@ -1353,7 +1360,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '77';
+const APP_VERSION = '81';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1750,7 +1757,7 @@ function renderChart() {
         total += m.value;
         weights = weights.concat(m.weights);
       }
-      const label = i === 0 ? 'now' : ref.toLocaleDateString('en-AU', { month: 'short' });
+      const label = ref.toLocaleDateString('en-AU', { month: 'short' });
       bars.push({ label, value: total, weights, isNow: i === 0 });
     }
   }
