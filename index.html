@@ -580,7 +580,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v82 — Current</div>
+          <div class="cl-version">v83 — Current</div>
+          <ul class="cl-list">
+            <li>Weekly (7W) bar chart now shows each week's start-end date range (e.g. "30 Jun - 6 Jul") below every bar</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v82</div>
           <ul class="cl-list">
             <li>Weekly (7W) bar chart shows "last 7 days" instead of "now"</li>
           </ul>
@@ -1367,7 +1374,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '82';
+const APP_VERSION = '83';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1746,7 +1753,9 @@ function renderChart() {
         weights = weights.concat(m.weights);
       }
       const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() - i * 7);
-      const label = i === 0 ? 'last 7 days' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+      const weekStart = new Date(weekEnd); weekStart.setDate(weekStart.getDate() - 6);
+      const fmtShort = (dt) => `${dt.getDate()} ${dt.toLocaleDateString('en-AU', { month: 'short' })}`;
+      const label = `${fmtShort(weekStart)} - ${fmtShort(weekEnd)}`;
       bars.push({ label, value: total, weights, isNow: i === 0 });
     }
   } else if (chartPeriod === 'months') {
