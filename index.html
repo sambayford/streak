@@ -109,7 +109,7 @@
   .stat-value.purple { color: var(--accent); }
   .stat-value.gold { color: var(--gold); }
   .stat-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-bottom: 28px; position: relative; margin-bottom: 0; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-bottom: 28px; position: relative; margin-bottom: 4px; }
   .bar-chart::after { content: ''; position: absolute; bottom: 28px; left: 0; right: 0; height: 1px; background: var(--border); }
   .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
   .bar-val { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1; min-height: 14px; display: flex; align-items: flex-end; }
@@ -420,9 +420,9 @@
       <option value="">All activities (XP)</option>
     </select>
     <div id="bar-chart" class="bar-chart"></div>
+    <div id="bar-labels" class="bar-labels"></div>
     <div id="bar-scores" class="bar-scores"></div>
     <div id="bar-weights" class="bar-weights"></div>
-    <div id="bar-labels" class="bar-labels"></div>
 
     <div class="section-head" style="margin-top:28px;">
       <span class="section-title">🏆 Personal bests</span>
@@ -580,7 +580,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v84 — Current</div>
+          <div class="cl-version">v85 — Current</div>
+          <ul class="cl-list">
+            <li>Chart row order changed to bars → day/week/month labels → XP → weight tags</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v84</div>
           <ul class="cl-list">
             <li>XP now sits directly under each bar with no gap; day/week/month labels moved below the XP row</li>
             <li>7W date range label now shown as a centred 3-line block (start date / dash / end date)</li>
@@ -1382,7 +1389,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '84';
+const APP_VERSION = '85';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
