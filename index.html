@@ -322,6 +322,13 @@
   }
   .chart-activity-select:focus { border-color: var(--accent); }
 
+  .pb-sort-select {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 7px;
+    padding: 4px 8px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px;
+    outline: none; cursor: pointer;
+  }
+  .pb-sort-select:focus { border-color: var(--accent); }
+
   /* Chart period toggle */
   .chart-toggle { display: flex; gap: 4px; }
   .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
@@ -426,6 +433,12 @@
 
     <div class="section-head" style="margin-top:28px;">
       <span class="section-title">🏆 Personal bests</span>
+      <select id="pb-sort-select" class="pb-sort-select" onchange="setPbSort(this.value)">
+        <option value="default">Default</option>
+        <option value="name">Name (A–Z)</option>
+        <option value="streak">Streak (high–low)</option>
+        <option value="best">Best (high–low)</option>
+      </select>
     </div>
     <div id="pb-list"></div>
   </div>
@@ -580,7 +593,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v86 — Current</div>
+          <div class="cl-version">v87 — Current</div>
+          <ul class="cl-list">
+            <li>Added a sort dropdown to Personal bests: Default, Name (A–Z), Streak (high–low), Best (high–low)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v86</div>
           <ul class="cl-list">
             <li>Removed the gap between the bars and the day/week/month labels row</li>
           </ul>
@@ -1396,7 +1416,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '86';
+const APP_VERSION = '87';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1463,6 +1483,12 @@ const sortState = { positive: 'manual', negative: 'manual' };
 
 let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
 let chartActivityId = ''; // '' = all activities (XP mode), else specific activity id
+let pbSort = 'default'; // 'default' | 'name' | 'streak' | 'best'
+
+function setPbSort(val) {
+  pbSort = val;
+  renderPersonalBests();
+}
 
 function setChartActivity(id) {
   chartActivityId = id;
@@ -1880,6 +1906,22 @@ function calcBestWeight(id) {
   return best;
 }
 
+function sortHabitsForPB(habits, bests) {
+  const arr = habits.slice();
+  if (pbSort === 'name') {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (pbSort === 'streak') {
+    arr.sort((a, b) => (state.habitStreaks?.[b.id] || 0) - (state.habitStreaks?.[a.id] || 0));
+  } else if (pbSort === 'best') {
+    arr.sort((a, b) => {
+      const av = a.type === 'positive' ? (bests.habits[a.id]?.count || 0) : (state.habitStreaks?.[a.id] || 0);
+      const bv = b.type === 'positive' ? (bests.habits[b.id]?.count || 0) : (state.habitStreaks?.[b.id] || 0);
+      return bv - av;
+    });
+  }
+  return arr;
+}
+
 function renderPersonalBests() {
   const bests = calcPersonalBests();
   const el = document.getElementById('pb-list');
@@ -1887,8 +1929,8 @@ function renderPersonalBests() {
 
   let html = '';
 
-  const positives = state.habits.filter(h => h.type === 'positive');
-  const negatives = state.habits.filter(h => h.type === 'negative');
+  const positives = sortHabitsForPB(state.habits.filter(h => h.type === 'positive'), bests);
+  const negatives = sortHabitsForPB(state.habits.filter(h => h.type === 'negative'), bests);
 
   if (positives.length) {
     for (const h of positives) {
