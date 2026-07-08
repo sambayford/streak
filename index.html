@@ -593,7 +593,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v87 — Current</div>
+          <div class="cl-version">v88 — Current</div>
+          <ul class="cl-list">
+            <li>Fixed hold-to-edit on activities: tiny finger movement while holding no longer cancels the long-press</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v87</div>
           <ul class="cl-list">
             <li>Added a sort dropdown to Personal bests: Default, Name (A–Z), Streak (high–low), Best (high–low)</li>
           </ul>
@@ -1416,7 +1423,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '87';
+const APP_VERSION = '88';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -2043,6 +2050,7 @@ function commitAdjust(id, key, delta, h, weight) {
 
 // ─── Long press + drag ────────────────────────────────────────────────────────
 let lpTimer = null;
+let lpStartX = 0, lpStartY = 0;
 let dragging = null; // { id, el, ghost, listEl, startY, lastIndex }
 
 function onCardTouchStart(e, id) {
@@ -2054,6 +2062,9 @@ function onCardTouchStart(e, id) {
     return;
   }
   // Long press for edit
+  const t = e.touches[0];
+  lpStartX = t.clientX;
+  lpStartY = t.clientY;
   lpTimer = setTimeout(() => { lpTimer = null; openEditModal(id); }, 600);
 }
 
@@ -2068,7 +2079,12 @@ function onCardTouchMove(e) {
     moveDrag(e.touches[0]);
     return;
   }
-  cancelLongPress();
+  if (lpTimer) {
+    const t = e.touches[0];
+    const dx = t.clientX - lpStartX;
+    const dy = t.clientY - lpStartY;
+    if (Math.sqrt(dx * dx + dy * dy) > 10) cancelLongPress();
+  }
 }
 
 function cancelLongPress() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }
