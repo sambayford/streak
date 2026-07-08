@@ -339,16 +339,6 @@
   .day-btn { flex: 1; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
   .day-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
   .days-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-  /* Level system */
-  .level-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
-  .level-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .level-badge { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 700; background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.4); color: var(--accent); border-radius: 8px; padding: 4px 10px; flex-shrink: 0; white-space: nowrap; }
-  .level-info { flex: 1; min-width: 0; }
-  .level-title { font-weight: 600; font-size: 14px; }
-  .level-xp { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .level-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .level-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #c4b5fd); transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1); }
 </style>
 </head>
 <body>
@@ -593,7 +583,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v89 — Current</div>
+          <div class="cl-version">v90 — Current</div>
+          <ul class="cl-list">
+            <li>Removed dead code from the old Today-tab level bar (removed in v32) that was silently throwing an error on every render</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v89</div>
           <ul class="cl-list">
             <li>Fixed a bug that prevented editing any activity with a custom active-days selection (e.g. Mon/Wed/Fri)</li>
           </ul>
@@ -1430,7 +1427,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '89';
+const APP_VERSION = '90';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1577,17 +1574,7 @@ function calcLevel(xp) {
 function renderLevel() {
   const xp = calcTotalXP();
   const lvl = calcLevel(xp);
-  const thisLvlXP = xpForLevel(lvl);
-  const nextLvlXP = xpForLevel(lvl + 1);
-  const pct = lvl >= 50 ? 100 : Math.round(((xp - thisLvlXP) / (nextLvlXP - thisLvlXP)) * 100);
   const title = LEVEL_TITLES[Math.min(lvl - 1, LEVEL_TITLES.length - 1)];
-
-  document.getElementById('level-badge').textContent = `Lvl ${lvl}`;
-  document.getElementById('level-title').textContent = title;
-  document.getElementById('level-xp').textContent = lvl >= 50
-    ? `${xp} XP — Max level!`
-    : `${xp - thisLvlXP} / ${nextLvlXP - thisLvlXP} XP to next level`;
-  document.getElementById('level-bar').style.width = pct + '%';
 
   // Level up modal
   const prevLvl = state._displayedLevel || 0;
