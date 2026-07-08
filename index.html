@@ -593,7 +593,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v88 — Current</div>
+          <div class="cl-version">v89 — Current</div>
+          <ul class="cl-list">
+            <li>Fixed a bug that prevented editing any activity with a custom active-days selection (e.g. Mon/Wed/Fri)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v88</div>
           <ul class="cl-list">
             <li>Fixed hold-to-edit on activities: tiny finger movement while holding no longer cancels the long-press</li>
           </ul>
@@ -1423,7 +1430,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '88';
+const APP_VERSION = '89';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -2198,6 +2205,7 @@ function switchTab(name, btn) {
 // ─── Habit modal ──────────────────────────────────────────────────────────────
 let editingHabitId = null, selectedType = 'positive', selectedEmoji = '🏃';
 let selectedDays = [0,1,2,3,4,5,6];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 let trackWeight = false; // all days by default
 
 function toggleWeightTracking() {
