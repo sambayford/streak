@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v92 — Current</div>
+          <div class="cl-version">v93 — Current</div>
+          <ul class="cl-list">
+            <li>Log page's activity sort order (manual/A-Z/tally) is now remembered across app restarts</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v92</div>
           <ul class="cl-list">
             <li>Personal bests sort selection is now remembered across app restarts</li>
           </ul>
@@ -1440,7 +1447,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '92';
+const APP_VERSION = '93';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1456,8 +1463,9 @@ function loadState() {
       log: s.log || {},
       habitStreaks: s.habitStreaks || {}, // { [id]: { streak, lastActive } }
       pbSort: s.pbSort || 'default',
+      sortState: s.sortState || { positive: 'manual', negative: 'manual' },
     };
-  } catch { return { habits: [], log: {}, habitStreaks: {}, pbSort: 'default' }; }
+  } catch { return { habits: [], log: {}, habitStreaks: {}, pbSort: 'default', sortState: { positive: 'manual', negative: 'manual' } }; }
 }
 
 function save() { localStorage.setItem('streak_v3', JSON.stringify(state)); }
@@ -1504,7 +1512,8 @@ function goToDate(dateStr) {
 }
 
 // sort: 'manual' | 'az' | 'za' | 'asc' | 'desc'
-const sortState = { positive: 'manual', negative: 'manual' };
+state.sortState = state.sortState || { positive: 'manual', negative: 'manual' };
+const sortState = state.sortState;
 
 let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
 let chartActivityId = ''; // '' = all activities (XP mode), else specific activity id
@@ -1550,6 +1559,7 @@ function cycleSort(type) {
   const btn = document.getElementById(`sort-${type === 'positive' ? 'pos' : 'neg'}-btn`);
   btn.textContent = labels[sortState[type]];
   btn.classList.toggle('active', sortState[type] !== 'manual');
+  save();
   renderHabitList(type);
 }
 
@@ -2688,6 +2698,18 @@ function seedIfEmpty() {
 seedIfEmpty();
 restoreAfterUpdate();
 updateStreaks();
+
+function syncSortButtons() {
+  const labels = { manual: '↕', az: 'A↑', za: 'A↓', asc: '#↑', desc: '#↓' };
+  ['positive', 'negative'].forEach(type => {
+    const btn = document.getElementById(`sort-${type === 'positive' ? 'pos' : 'neg'}-btn`);
+    if (!btn) return;
+    btn.textContent = labels[sortState[type]];
+    btn.classList.toggle('active', sortState[type] !== 'manual');
+  });
+}
+
+syncSortButtons();
 render();
 registerSW();
 </script>
