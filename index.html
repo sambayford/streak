@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v91 — Current</div>
+          <div class="cl-version">v92 — Current</div>
+          <ul class="cl-list">
+            <li>Personal bests sort selection is now remembered across app restarts</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v91</div>
           <ul class="cl-list">
             <li>Removed a leftover 28px reserved space below the bars (from an old in-chart label design) that was creating a visible gap before the labels row</li>
           </ul>
@@ -1433,7 +1440,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '91';
+const APP_VERSION = '92';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1448,8 +1455,9 @@ function loadState() {
       habits: s.habits || [],
       log: s.log || {},
       habitStreaks: s.habitStreaks || {}, // { [id]: { streak, lastActive } }
+      pbSort: s.pbSort || 'default',
     };
-  } catch { return { habits: [], log: {}, habitStreaks: {} }; }
+  } catch { return { habits: [], log: {}, habitStreaks: {}, pbSort: 'default' }; }
 }
 
 function save() { localStorage.setItem('streak_v3', JSON.stringify(state)); }
@@ -1500,10 +1508,12 @@ const sortState = { positive: 'manual', negative: 'manual' };
 
 let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
 let chartActivityId = ''; // '' = all activities (XP mode), else specific activity id
-let pbSort = 'default'; // 'default' | 'name' | 'streak' | 'best'
+let pbSort = state.pbSort || 'default'; // 'default' | 'name' | 'streak' | 'best'
 
 function setPbSort(val) {
   pbSort = val;
+  state.pbSort = val;
+  save();
   renderPersonalBests();
 }
 
@@ -1933,6 +1943,9 @@ function renderPersonalBests() {
   const bests = calcPersonalBests();
   const el = document.getElementById('pb-list');
   if (!el) return;
+
+  const sortSelect = document.getElementById('pb-sort-select');
+  if (sortSelect) sortSelect.value = pbSort;
 
   let html = '';
 
