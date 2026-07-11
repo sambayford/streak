@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v93 — Current</div>
+          <div class="cl-version">v94 — Current</div>
+          <ul class="cl-list">
+            <li>Added swipe gesture on the log screen: swipe left for the next day, swipe right for the previous day</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v93</div>
           <ul class="cl-list">
             <li>Log page's activity sort order (manual/A-Z/tally) is now remembered across app restarts</li>
           </ul>
@@ -1447,7 +1454,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '93';
+const APP_VERSION = '94';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1485,6 +1492,36 @@ function shiftDay(delta) {
   if (next > 0) return; // can't go into the future
   viewOffset = next;
   renderToday();
+}
+
+// ─── Swipe between days on the log screen ─────────────────────────────────────
+let logSwipeStartX = 0, logSwipeStartY = 0, logSwipeTracking = false;
+
+function onLogSwipeStart(e) {
+  if (dragging) return; // don't interfere with card drag-reorder
+  const t = e.touches[0];
+  logSwipeStartX = t.clientX;
+  logSwipeStartY = t.clientY;
+  logSwipeTracking = true;
+}
+
+function onLogSwipeEnd(e) {
+  if (!logSwipeTracking || dragging) { logSwipeTracking = false; return; }
+  logSwipeTracking = false;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - logSwipeStartX;
+  const dy = t.clientY - logSwipeStartY;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    if (dx < 0) shiftDay(1); // swipe left -> next (later) day
+    else shiftDay(-1); // swipe right -> previous (earlier) day
+  }
+}
+
+function initLogSwipe() {
+  const panel = document.getElementById('panel-today');
+  if (!panel) return;
+  panel.addEventListener('touchstart', onLogSwipeStart, { passive: true });
+  panel.addEventListener('touchend', onLogSwipeEnd, { passive: true });
 }
 
 function goToToday() {
@@ -2710,6 +2747,7 @@ function syncSortButtons() {
 }
 
 syncSortButtons();
+initLogSwipe();
 render();
 registerSW();
 </script>
