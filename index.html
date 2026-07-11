@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v94 — Current</div>
+          <div class="cl-version">v95 — Current</div>
+          <ul class="cl-list">
+            <li>Added "Min logs per day for streak" field to positive activities — a day only counts toward the streak once you hit this many logs</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v94</div>
           <ul class="cl-list">
             <li>Added swipe gesture on the log screen: swipe left for the next day, swipe right for the previous day</li>
           </ul>
@@ -1422,6 +1429,11 @@
       <p class="days-hint" id="days-hint">Every day</p>
     </div>
 
+    <div class="field" id="mincount-field">
+      <label>Min logs per day for streak</label>
+      <input type="number" id="habit-mincount-input" value="1" min="1" max="99">
+    </div>
+
     <div class="weight-section" id="weight-section">
       <div class="weight-section-head">
         <span class="weight-section-title">🏋️ Track weight</span>
@@ -1454,7 +1466,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '94';
+const APP_VERSION = '95';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1662,6 +1674,7 @@ function calcHabitStreak(id) {
   if (!h) return 0;
   const isBreak = h.type === 'negative';
   const scheduledDays = (h.days && h.days.length) ? h.days : [0,1,2,3,4,5,6];
+  const minCount = h.minCount || 1;
   let streak = 0;
   let offset = 0;
   while (offset < 366) {
@@ -1671,7 +1684,7 @@ function calcHabitStreak(id) {
     // For positive habits, skip unscheduled days — they don't break the streak
     if (!isBreak && !scheduledDays.includes(dow)) { offset++; continue; }
     const count = (state.log[key] || {})[id] || 0;
-    const active = isBreak ? count === 0 : count > 0;
+    const active = isBreak ? count === 0 : count >= minCount;
     if (!active) break;
     streak++;
     offset++;
@@ -2313,6 +2326,7 @@ function openAddModal(type) {
   document.getElementById('modal-title').textContent = 'New';
   document.getElementById('habit-name-input').value = '';
   document.getElementById('habit-pts-input').value = 5;
+  document.getElementById('habit-mincount-input').value = 1;
   document.getElementById('habit-modal-actions').innerHTML = `
     <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
     <button class="btn-primary" onclick="saveHabit()">Save activity</button>`;
@@ -2322,6 +2336,7 @@ function openAddModal(type) {
   document.getElementById('emoji-custom-input').value = '';
   initDayPicker([0,1,2,3,4,5,6]);
   document.getElementById('days-field').style.display = (type === 'negative') ? 'none' : '';
+  document.getElementById('mincount-field').style.display = (type === 'negative') ? 'none' : '';
   initWeightToggle(false);
   document.getElementById('weight-section').style.display = (type === 'negative') ? 'none' : '';
   openModal('habit-modal');
@@ -2334,6 +2349,7 @@ function openEditModal(id) {
   document.getElementById('modal-title').textContent = 'Edit';
   document.getElementById('habit-name-input').value = h.name;
   document.getElementById('habit-pts-input').value = h.pts;
+  document.getElementById('habit-mincount-input').value = h.minCount || 1;
   setType(h.type);
   selectedEmoji = h.icon;
   document.getElementById('habit-modal-actions').innerHTML = `
@@ -2342,6 +2358,7 @@ function openEditModal(id) {
   renderEmojiGrid();
   initDayPicker(h.days || [0,1,2,3,4,5,6]);
   document.getElementById('days-field').style.display = h.type === 'negative' ? 'none' : '';
+  document.getElementById('mincount-field').style.display = h.type === 'negative' ? 'none' : '';
   initWeightToggle(h.trackWeight || false);
   document.getElementById('weight-section').style.display = h.type === 'negative' ? 'none' : '';
   openModal('habit-modal');
@@ -2353,6 +2370,8 @@ function setType(t) {
   document.getElementById('type-neg').classList.toggle('selected', t === 'negative');
   const daysField = document.getElementById('days-field');
   if (daysField) daysField.style.display = t === 'negative' ? 'none' : '';
+  const minCountField = document.getElementById('mincount-field');
+  if (minCountField) minCountField.style.display = t === 'negative' ? 'none' : '';
   const weightSection = document.getElementById('weight-section');
   if (weightSection) weightSection.style.display = t === 'negative' ? 'none' : '';
 }
@@ -2384,13 +2403,14 @@ function onCustomEmoji(input) {
 function saveHabit() {
   const name = document.getElementById('habit-name-input').value.trim();
   const pts = Math.min(20, Math.max(1, parseInt(document.getElementById('habit-pts-input').value) || 5));
+  const minCount = Math.min(99, Math.max(1, parseInt(document.getElementById('habit-mincount-input').value) || 1));
   if (!name) { showToast('Give it a name'); return; }
 
   if (editingHabitId) {
     const h = state.habits.find(x => x.id === editingHabitId);
-    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; }
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; h.minCount = selectedType === 'positive' ? minCount : null; }
   } else {
-    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false });
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false, minCount: selectedType === 'positive' ? minCount : null });
   }
   save();
   closeModal('habit-modal');
