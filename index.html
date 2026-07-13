@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v95 — Current</div>
+          <div class="cl-version">v96 — Current</div>
+          <ul class="cl-list">
+            <li>Added "Track reps" toggle for positive activities, mirroring weight tracking — prompts for reps on each log and shows them in the card meta line</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v95</div>
           <ul class="cl-list">
             <li>Added "Min logs per day for streak" field to positive activities — a day only counts toward the streak once you hit this many logs</li>
           </ul>
@@ -1442,6 +1449,14 @@
       <p style="font-size:12px;color:var(--muted);margin-top:10px;display:none" id="weight-hint">Each time you tap + you'll be prompted to enter the weight used.</p>
     </div>
 
+    <div class="weight-section" id="reps-section">
+      <div class="weight-section-head">
+        <span class="weight-section-title">🔢 Track reps</span>
+        <button class="weight-toggle" id="reps-toggle-btn" onclick="toggleRepsTracking()"></button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;display:none" id="reps-hint">Each time you tap + you'll be prompted to enter the reps done.</p>
+    </div>
+
     <div class="modal-actions" id="habit-modal-actions">
       <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
       <button class="btn-primary" onclick="saveHabit()">Save activity</button>
@@ -1466,7 +1481,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '95';
+const APP_VERSION = '96';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -1783,9 +1798,11 @@ function renderHabitList(type) {
     const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
     const weights = h.trackWeight && log[h.id + '_weights']?.length
       ? ` · ${log[h.id + '_weights'].join(', ')}kg` : '';
+    const reps = h.trackReps && log[h.id + '_reps']?.length
+      ? ` · ${log[h.id + '_reps'].join(', ')} reps` : '';
     const metaStr = count === 0
       ? `${days}${streakStr}`.replace(/^ · /, '') || '—'
-      : `×${count} = ${totalStr} XP${days}${streakStr}${weights}`;
+      : `×${count} = ${totalStr} XP${days}${streakStr}${weights}${reps}`;
     const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
     const draggable = sort === 'manual';
     return `<div class="habit-card ${type}" data-id="${h.id}"
@@ -2059,23 +2076,33 @@ function adjustHabit(id, delta) {
   const next = Math.max(0, prev + delta);
   if (next === prev) return;
 
-  // Weight prompt for positive delta on weight-tracked habits
-  if (h.trackWeight && delta > 0) {
-    promptWeight(h, key, delta);
+  // Prompt for weight and/or reps on positive delta for tracked habits
+  if ((h.trackWeight || h.trackReps) && delta > 0) {
+    promptLogDetails(h, key, delta);
     return;
   }
 
-  commitAdjust(id, key, delta, h, null);
+  commitAdjust(id, key, delta, h, null, null);
 }
 
-function promptWeight(h, key, delta) {
-  // Show weight input modal
-  const lastWeight = getLastWeight(h.id);
-  const input = prompt(`${h.icon} ${h.name}\nEnter weight used (kg):`, lastWeight || '');
-  if (input === null) return; // cancelled
-  const weight = parseFloat(input);
-  const weightVal = isNaN(weight) ? null : weight;
-  commitAdjust(h.id, key, delta, h, weightVal);
+function promptLogDetails(h, key, delta) {
+  let weightVal = null;
+  if (h.trackWeight) {
+    const lastWeight = getLastWeight(h.id);
+    const input = prompt(`${h.icon} ${h.name}\nEnter weight used (kg):`, lastWeight || '');
+    if (input === null) return; // cancelled
+    const weight = parseFloat(input);
+    weightVal = isNaN(weight) ? null : weight;
+  }
+  let repsVal = null;
+  if (h.trackReps) {
+    const lastReps = getLastReps(h.id);
+    const input = prompt(`${h.icon} ${h.name}\nEnter reps:`, lastReps || '');
+    if (input === null) return; // cancelled
+    const reps = parseInt(input);
+    repsVal = isNaN(reps) ? null : reps;
+  }
+  commitAdjust(h.id, key, delta, h, weightVal, repsVal);
 }
 
 function getLastWeight(id) {
@@ -2090,32 +2117,56 @@ function getLastWeight(id) {
   return '';
 }
 
-function commitAdjust(id, key, delta, h, weight) {
+function getLastReps(id) {
+  // Find the most recent reps entry for this habit
+  const keys = Object.keys(state.log).sort().reverse();
+  for (const k of keys) {
+    const entry = state.log[k];
+    if (entry[id + '_reps'] && entry[id + '_reps'].length) {
+      return entry[id + '_reps'].slice(-1)[0];
+    }
+  }
+  return '';
+}
+
+function commitAdjust(id, key, delta, h, weight, reps) {
   if (!state.log[key]) state.log[key] = {};
   const prev = state.log[key][id] || 0;
   const next = Math.max(0, prev + delta);
   if (next === prev) return;
   state.log[key][id] = next;
 
-  // Store weight if provided
+  // Store weight/reps if provided
   if (weight !== null && delta > 0) {
     if (!state.log[key][id + '_weights']) state.log[key][id + '_weights'] = [];
     state.log[key][id + '_weights'].push(weight);
   }
+  if (reps !== null && delta > 0) {
+    if (!state.log[key][id + '_reps']) state.log[key][id + '_reps'] = [];
+    state.log[key][id + '_reps'].push(reps);
+  }
 
-  // When count is decremented back to 0, clear any weight records for that day
-  if (next === 0 && state.log[key][id + '_weights']) {
-    delete state.log[key][id + '_weights'];
-  } else if (delta < 0 && state.log[key][id + '_weights']?.length) {
-    // Decrementing but not yet at 0 — drop the most recent weight entry to stay in sync
-    state.log[key][id + '_weights'].pop();
-    if (state.log[key][id + '_weights'].length === 0) delete state.log[key][id + '_weights'];
+  // When count is decremented back to 0, clear any weight/reps records for that day
+  if (next === 0) {
+    if (state.log[key][id + '_weights']) delete state.log[key][id + '_weights'];
+    if (state.log[key][id + '_reps']) delete state.log[key][id + '_reps'];
+  } else if (delta < 0) {
+    // Decrementing but not yet at 0 — drop the most recent entry to stay in sync
+    if (state.log[key][id + '_weights']?.length) {
+      state.log[key][id + '_weights'].pop();
+      if (state.log[key][id + '_weights'].length === 0) delete state.log[key][id + '_weights'];
+    }
+    if (state.log[key][id + '_reps']?.length) {
+      state.log[key][id + '_reps'].pop();
+      if (state.log[key][id + '_reps'].length === 0) delete state.log[key][id + '_reps'];
+    }
   }
 
   const pts = h.type === 'positive' ? h.pts : -h.pts;
   const change = delta * pts;
   const weightStr = weight !== null ? ` · ${weight}kg` : '';
-  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} XP${weightStr}` : `${h.icon} removed one`);
+  const repsStr = reps !== null ? ` · ${reps} reps` : '';
+  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} XP${weightStr}${repsStr}` : `${h.icon} removed one`);
   updateStreaks();
   save();
   render();
@@ -2286,6 +2337,20 @@ function initWeightToggle(val) {
   document.getElementById('weight-hint').style.display = trackWeight ? '' : 'none';
 }
 
+let trackReps = false;
+
+function toggleRepsTracking() {
+  trackReps = !trackReps;
+  document.getElementById('reps-toggle-btn').classList.toggle('on', trackReps);
+  document.getElementById('reps-hint').style.display = trackReps ? '' : 'none';
+}
+
+function initRepsToggle(val) {
+  trackReps = !!val;
+  document.getElementById('reps-toggle-btn').classList.toggle('on', trackReps);
+  document.getElementById('reps-hint').style.display = trackReps ? '' : 'none';
+}
+
 function initDayPicker(days) {
   selectedDays = days ? [...days] : [0,1,2,3,4,5,6];
   document.querySelectorAll('.day-btn').forEach(btn => {
@@ -2339,6 +2404,8 @@ function openAddModal(type) {
   document.getElementById('mincount-field').style.display = (type === 'negative') ? 'none' : '';
   initWeightToggle(false);
   document.getElementById('weight-section').style.display = (type === 'negative') ? 'none' : '';
+  initRepsToggle(false);
+  document.getElementById('reps-section').style.display = (type === 'negative') ? 'none' : '';
   openModal('habit-modal');
 }
 
@@ -2361,6 +2428,8 @@ function openEditModal(id) {
   document.getElementById('mincount-field').style.display = h.type === 'negative' ? 'none' : '';
   initWeightToggle(h.trackWeight || false);
   document.getElementById('weight-section').style.display = h.type === 'negative' ? 'none' : '';
+  initRepsToggle(h.trackReps || false);
+  document.getElementById('reps-section').style.display = h.type === 'negative' ? 'none' : '';
   openModal('habit-modal');
 }
 
@@ -2374,6 +2443,8 @@ function setType(t) {
   if (minCountField) minCountField.style.display = t === 'negative' ? 'none' : '';
   const weightSection = document.getElementById('weight-section');
   if (weightSection) weightSection.style.display = t === 'negative' ? 'none' : '';
+  const repsSection = document.getElementById('reps-section');
+  if (repsSection) repsSection.style.display = t === 'negative' ? 'none' : '';
 }
 
 function renderEmojiGrid() {
@@ -2408,9 +2479,9 @@ function saveHabit() {
 
   if (editingHabitId) {
     const h = state.habits.find(x => x.id === editingHabitId);
-    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; h.minCount = selectedType === 'positive' ? minCount : null; }
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; h.trackReps = selectedType === 'positive' ? trackReps : false; h.minCount = selectedType === 'positive' ? minCount : null; }
   } else {
-    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false, minCount: selectedType === 'positive' ? minCount : null });
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false, trackReps: selectedType === 'positive' ? trackReps : false, minCount: selectedType === 'positive' ? minCount : null });
   }
   save();
   closeModal('habit-modal');
