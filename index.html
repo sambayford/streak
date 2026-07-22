@@ -582,7 +582,14 @@
       <div class="changelog">
 
         <div class="cl-entry">
-          <div class="cl-version">v97 — Current</div>
+          <div class="cl-version">v98 — Current</div>
+          <ul class="cl-list">
+            <li>Fixed Export not downloading in some app wrappers — the object URL was being revoked immediately after the click instead of after a short delay, which could abort the download before it started</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v97</div>
           <ul class="cl-list">
             <li>When an activity tracks both weight and reps, the card meta line now pairs them per set (e.g. "10x 20kg, 5x 30kg") instead of listing them separately</li>
           </ul>
@@ -1488,7 +1495,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION = '97';
+const APP_VERSION = '98';
 
 const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
   '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
@@ -2767,8 +2774,16 @@ function exportData() {
   const a = document.createElement('a');
   const date = new Date().toISOString().slice(0, 10);
   a.href = url; a.download = `streak-backup-${date}.json`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  // Revoking the object URL immediately can abort the download before it
+  // actually starts (seen in some Android WebView app wrappers) — give it
+  // a moment first, same fix as fruit-cascade's downloadProgress().
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
   showToast('📤 Data exported');
 }
 
